@@ -1,0 +1,411 @@
+// CompuResolve Prisma schema (MVP) - Phase 2
+// PostgreSQL on Neon. Prisma 7 style, same as hello-api: the connection URL lives in prisma.config.ts.
+// Authorization rules must also be enforced in the Express API; schema relations alone do not secure data.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum DepartmentRole {
+  STUDENT
+  OFFICER
+  HOD
+}
+
+enum FacultyRole {
+  FACULTY_ADMIN
+}
+
+// Student level (100-500).
+enum Level {
+  L100
+  L200
+  L300
+  L400
+  L500
+}
+
+enum MembershipStatus {
+  ACTIVE
+  PENDING
+  SUSPENDED
+}
+
+enum ComplaintScope {
+  DEPARTMENT
+  FACULTY
+}
+
+enum ComplaintStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  AWAITING_STUDENT
+  IN_PROGRESS
+  ESCALATED
+  RESOLVED
+  CLOSED
+  REJECTED
+}
+
+enum ComplaintPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum MessageVisibility {
+  STUDENT_AND_STAFF
+  STAFF_ONLY
+}
+
+enum NotificationType {
+  COMPLAINT_SUBMITTED
+  COMPLAINT_ASSIGNED
+  STATUS_CHANGED
+  MESSAGE_RECEIVED
+  COMPLAINT_ESCALATED
+  COMPLAINT_RESOLVED
+  REOPEN_REQUESTED
+  REOPEN_REQUEST_DECIDED
+}
+
+enum ReopenRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Department {
+  id          String                  @id @default(uuid()) @db.Uuid
+  name        String                  @unique
+  code        String                  @unique
+  isActive    Boolean                 @default(true)
+  memberships DepartmentMembership[]
+  complaints  Complaint[]
+  auditLogs   AuditLog[]
+  categories  ComplaintCategory[]
+  roleGrantRequests RoleGrantRequest[]
+  escalationsFrom ComplaintEscalation[]
+  staffInvitations StaffInvitation[]
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+}
+
+model User {
+  id                    String                   @id @default(uuid()) @db.Uuid
+  fullName              String
+  email                 String                   @unique
+  emailVerifiedAt       DateTime?
+  // Store only a secure password hash, never a plaintext password.
+  passwordHash          String
+  // Optional because staff accounts may not have a student matric number.
+  matricNumber          String?                  @unique
+  isActive              Boolean                  @default(true)
+  memberships           DepartmentMembership[]
+  facultyRoles          UserFacultyRole[]
+  submittedComplaints   Complaint[]              @relation("ComplaintSubmitter")
+  currentAssignments    Complaint[]              @relation("CurrentAssignee")
+  assignmentsMade       ComplaintAssignment[]    @relation("AssignmentActor")
+  assignmentHistory     ComplaintAssignment[]    @relation("AssignedOfficer")
+  statusChanges         ComplaintStatusHistory[] @relation("StatusActor")
+  messages              ComplaintMessage[]
+  notifications         Notification[]
+  auditLogs             AuditLog[]
+  escalationActions     ComplaintEscalation[]    @relation("EscalationActor")
+  reopenRequests        ComplaintReopenRequest[] @relation("ReopenRequester")
+  reopenDecisions       ComplaintReopenRequest[] @relation("ReopenDecider")
+  roleGrantRequests     RoleGrantRequest[]       @relation("RoleRequestUser")
+  roleRequestsReviewed  RoleGrantRequest[]       @relation("RoleRequestReviewer")
+  studentProfile        StudentProfile?
+  sessions              Session[]
+  emailVerificationTokens EmailVerificationToken[]
+  invitationsSent       StaffInvitation[]        @relation("InvitationInviter")
+  createdAt             DateTime                 @default(now())
+  updatedAt             DateTime                 @updatedAt
+}
+
+model DepartmentMembership {
+  id           String           @id @default(uuid()) @db.Uuid
+  userId       String           @db.Uuid
+  departmentId String           @db.Uuid
+  role         DepartmentRole
+  status       MembershipStatus @default(ACTIVE)
+  user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  department   Department       @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  // One current role per user per department. If multiple roles per department are needed later,
+  // replace this constraint with a suitable composite uniqueness rule.
+  @@unique([userId, departmentId])
+  @@index([departmentId, role, status])
+  @@index([userId, status])
+}
+
+model UserFacultyRole {
+  id        String     @id @default(uuid()) @db.Uuid
+  userId    String     @db.Uuid
+  role      FacultyRole
+  isActive  Boolean    @default(true)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@unique([userId, role])
+  @@index([role, isActive])
+}
+
+// Staff must not be able to grant these roles to themselves. Express routes should create/review requests
+// only through an authorized approval process; do not trust a role submitted by the public registration form.
+model RoleGrantRequest {
+  id                 String           @id @default(uuid()) @db.Uuid
+  userId             String           @db.Uuid
+  requestedRole      DepartmentRole?
+  requestedFacultyRole FacultyRole?
+  departmentId       String?          @db.Uuid
+  status             MembershipStatus @default(PENDING)
+  reason             String?          @db.Text
+  reviewedById       String?          @db.Uuid
+  reviewedAt         DateTime?
+  user               User             @relation("RoleRequestUser", fields: [userId], references: [id], onDelete: Cascade)
+  reviewer           User?            @relation("RoleRequestReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  department         Department?      @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  @@index([status, createdAt])
+  @@index([userId, status])
+  @@index([departmentId, requestedRole, status])
+}
+
+model ComplaintCategory {
+  id           String         @id @default(uuid()) @db.Uuid
+  name         String
+  scope        ComplaintScope
+  departmentId String?        @db.Uuid
+  isActive     Boolean        @default(true)
+  department   Department?    @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  complaints   Complaint[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@unique([name, scope, departmentId])
+  @@index([scope, isActive])
+  @@index([departmentId, isActive])
+}
+
+model Complaint {
+  id             String                  @id @default(uuid()) @db.Uuid
+  reference      String                  @unique
+  scope          ComplaintScope
+  // Required for DEPARTMENT scope; null for FACULTY scope. Enforce this invariant in API validation
+  // and add a PostgreSQL CHECK constraint in a migration if desired.
+  departmentId   String?                 @db.Uuid
+  submittedById  String                  @db.Uuid
+  categoryId     String                  @db.Uuid
+  assignedToId   String?                 @db.Uuid
+  title          String
+  description    String                  @db.Text
+  status         ComplaintStatus         @default(SUBMITTED)
+  priority       ComplaintPriority       @default(NORMAL)
+  resolutionNote String?                 @db.Text
+  resolvedAt     DateTime?
+  closedAt       DateTime?
+  // Set when the HOD escalates a departmental complaint to the faculty. Faculty Admin access follows this
+  // flag (not the status), so it survives later status changes. departmentId is kept for history.
+  escalatedToFaculty Boolean             @default(false)
+  escalatedAt    DateTime?
+  department     Department?             @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  submittedBy    User                    @relation("ComplaintSubmitter", fields: [submittedById], references: [id], onDelete: Restrict)
+  category       ComplaintCategory       @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  assignedTo     User?                   @relation("CurrentAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  assignments    ComplaintAssignment[]
+  statusHistory  ComplaintStatusHistory[]
+  messages       ComplaintMessage[]
+  escalations    ComplaintEscalation[]
+  reopenRequests ComplaintReopenRequest[]
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+
+  @@index([scope, status, createdAt])
+  @@index([escalatedToFaculty, status, createdAt])
+  @@index([departmentId, status, createdAt])
+  @@index([submittedById, createdAt])
+  @@index([assignedToId, status, createdAt])
+}
+
+model ComplaintAssignment {
+  id           String    @id @default(uuid()) @db.Uuid
+  complaintId  String    @db.Uuid
+  officerId    String    @db.Uuid
+  assignedById String    @db.Uuid
+  assignedAt   DateTime  @default(now())
+  unassignedAt DateTime?
+  complaint    Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  officer      User      @relation("AssignedOfficer", fields: [officerId], references: [id], onDelete: Restrict)
+  assignedBy   User      @relation("AssignmentActor", fields: [assignedById], references: [id], onDelete: Restrict)
+
+  @@index([complaintId, assignedAt])
+  @@index([officerId, unassignedAt])
+}
+
+model ComplaintStatusHistory {
+  id          String          @id @default(uuid()) @db.Uuid
+  complaintId String          @db.Uuid
+  actorId     String          @db.Uuid
+  fromStatus  ComplaintStatus?
+  toStatus    ComplaintStatus
+  reason      String?         @db.Text
+  createdAt   DateTime        @default(now())
+  complaint   Complaint       @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  actor       User            @relation("StatusActor", fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([complaintId, createdAt])
+  @@index([actorId, createdAt])
+}
+
+model ComplaintEscalation {
+  id             String    @id @default(uuid()) @db.Uuid
+  complaintId    String    @db.Uuid
+  escalatedById  String    @db.Uuid
+  fromDepartmentId String? @db.Uuid
+  reason         String    @db.Text
+  createdAt      DateTime  @default(now())
+  complaint      Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  escalatedBy    User      @relation("EscalationActor", fields: [escalatedById], references: [id], onDelete: Restrict)
+  fromDepartment Department? @relation(fields: [fromDepartmentId], references: [id], onDelete: SetNull)
+
+  @@index([complaintId, createdAt])
+  @@index([escalatedById, createdAt])
+}
+
+model ComplaintReopenRequest {
+  id           String              @id @default(uuid()) @db.Uuid
+  complaintId  String              @db.Uuid
+  requesterId  String              @db.Uuid
+  status       ReopenRequestStatus @default(PENDING)
+  reason       String              @db.Text
+  decidedById  String?             @db.Uuid
+  decisionNote String?             @db.Text
+  decidedAt    DateTime?
+  complaint    Complaint           @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  requester    User                @relation("ReopenRequester", fields: [requesterId], references: [id], onDelete: Restrict)
+  decidedBy    User?               @relation("ReopenDecider", fields: [decidedById], references: [id], onDelete: SetNull)
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  @@index([complaintId, status, createdAt])
+  @@index([requesterId, createdAt])
+}
+
+model ComplaintMessage {
+  id          String           @id @default(uuid()) @db.Uuid
+  complaintId String           @db.Uuid
+  senderId    String           @db.Uuid
+  body        String           @db.Text
+  visibility  MessageVisibility @default(STUDENT_AND_STAFF)
+  createdAt   DateTime         @default(now())
+  complaint   Complaint        @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  sender      User             @relation(fields: [senderId], references: [id], onDelete: Restrict)
+
+  @@index([complaintId, createdAt])
+  @@index([senderId, createdAt])
+}
+
+model Notification {
+  id        String           @id @default(uuid()) @db.Uuid
+  userId    String           @db.Uuid
+  type      NotificationType
+  title     String
+  body      String           @db.Text
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt, createdAt])
+}
+
+model AuditLog {
+  id           String      @id @default(uuid()) @db.Uuid
+  actorId      String?     @db.Uuid
+  departmentId String?     @db.Uuid
+  action       String
+  entityType   String
+  entityId     String?
+  metadata     Json?
+  createdAt    DateTime    @default(now())
+  actor        User?       @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  department   Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+
+  @@index([actorId, createdAt])
+  @@index([departmentId, createdAt])
+  @@index([entityType, entityId])
+}
+
+// ---------------------------------------------------------------------------
+// Phase 2 additions
+// ---------------------------------------------------------------------------
+
+// Student-only data. Department comes from the STUDENT DepartmentMembership; matric number stays on User.
+model StudentProfile {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @unique @db.Uuid
+  level     Level
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Server-side login session. Only a hash of the cookie token is stored (same idea as hello-api).
+model Session {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// One-time email verification link. Only a hash of the token is stored.
+model EmailVerificationToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+}
+
+// Staff onboarding by invitation (never by public self-selection). Only a hash of the token is stored.
+// Exactly one of requestedRole (OFFICER or HOD, with departmentId) / requestedFacultyRole (no departmentId)
+// is set; this is enforced by a CHECK constraint added in the init migration.
+model StaffInvitation {
+  id                   String          @id @default(uuid()) @db.Uuid
+  email                String
+  requestedRole        DepartmentRole?
+  requestedFacultyRole FacultyRole?
+  departmentId         String?         @db.Uuid
+  tokenHash            String          @unique
+  expiresAt            DateTime
+  acceptedAt           DateTime?
+  revokedAt            DateTime?
+  invitedById          String          @db.Uuid
+  department           Department?     @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  invitedBy            User            @relation("InvitationInviter", fields: [invitedById], references: [id], onDelete: Restrict)
+  createdAt            DateTime        @default(now())
+
+  @@index([email])
+  @@index([departmentId, requestedRole])
+}
