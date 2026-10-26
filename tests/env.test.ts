@@ -49,4 +49,43 @@ describe('parseEnv', () => {
       expect((e as Error).message).not.toContain('topsecret');
     }
   });
+
+  test('mail defaults to console in development and never needs SMTP values there', () => {
+    const c = parseEnv({ DATABASE_URL: DB });
+    expect(c.mailMode).toBe('console');
+    expect(c.smtp).toBeUndefined();
+  });
+
+  test('smtp mode requires host, user and pass, and never echoes the password', () => {
+    expect(() => parseEnv({ DATABASE_URL: DB, MAIL_MODE: 'smtp' })).toThrow(/SMTP_HOST/);
+    const c = parseEnv({
+      DATABASE_URL: DB,
+      MAIL_MODE: 'smtp',
+      SMTP_HOST: 'smtp.gmail.com',
+      SMTP_USER: 'me@gmail.com',
+      SMTP_PASS: 'app-pass-secret',
+    });
+    expect(c.smtp).toEqual({ host: 'smtp.gmail.com', port: 465, user: 'me@gmail.com', pass: 'app-pass-secret' });
+    try {
+      parseEnv({ DATABASE_URL: DB, MAIL_MODE: 'smtp', SMTP_PASS: 'app-pass-secret' });
+    } catch (e) {
+      expect((e as Error).message).not.toContain('app-pass-secret');
+    }
+  });
+
+  test('production must use smtp (console would print one-time links)', () => {
+    expect(() =>
+      parseEnv({ NODE_ENV: 'production', DATABASE_URL: DB, FRONTEND_ORIGINS: 'https://app.example.com' }),
+    ).toThrow(/MAIL_MODE/);
+  });
+
+  test('enum errors name the variable but never echo the bad value', () => {
+    try {
+      parseEnv({ DATABASE_URL: DB, MAIL_MODE: 'oops-value-123' });
+      throw new Error('should have thrown');
+    } catch (e) {
+      expect((e as Error).message).toMatch(/MAIL_MODE/);
+      expect((e as Error).message).not.toContain('oops-value-123');
+    }
+  });
 });

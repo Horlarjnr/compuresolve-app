@@ -1,16 +1,21 @@
 // Tells TypeScript about the extra fields our middleware adds to req.
-// (requireAuth will add `user` in Phase 3.)
 export interface AuthUser {
   id: string;
+  fullName: string;
   email: string;
-  role: string;
+  matricNumber: string | null;
+  isActive: boolean;
+  emailVerifiedAt: Date | null;
+  memberships: { departmentId: string; role: string }[]; // active department roles
+  facultyRoles: { role: string }[]; // active faculty roles
+  studentProfile: { level: string } | null;
 }
 
 declare global {
   namespace Express {
     interface Request {
       id?: string; // request id, set by requestId middleware
-      user?: AuthUser;
+      user?: AuthUser; // set by requireAuth
     }
   }
 }
