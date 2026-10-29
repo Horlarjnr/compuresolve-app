@@ -18,7 +18,8 @@ export const passwordSchema = z
     'Use uppercase, lowercase, a number and a symbol, or a passphrase of 3+ words (16+ characters)',
   );
 
-const COST = 12;
+// bcrypt cost: 12 for real use. Tests use the minimum (4) so database tests are not slowed down by hashing.
+const COST = process.env.NODE_ENV === 'test' ? 4 : 12;
 
 export const hashPassword = (plain: string) => bcrypt.hash(plain, COST);
 

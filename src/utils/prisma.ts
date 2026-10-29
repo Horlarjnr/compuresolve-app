@@ -7,7 +7,12 @@ if (!env.databaseUrl) {
 }
 
 // The running app uses the pooled Neon URL (DATABASE_URL).
-const adapter = new PrismaPg({ connectionString: env.databaseUrl });
+// Generous timeouts: Neon computes can take a few seconds to wake up, and a slow network adds to connection time.
+const adapter = new PrismaPg({
+  connectionString: env.databaseUrl,
+  connectionTimeoutMillis: 30_000,
+  idleTimeoutMillis: 30_000,
+});
 const prisma = new PrismaClient({ adapter });
 
 export { prisma };
