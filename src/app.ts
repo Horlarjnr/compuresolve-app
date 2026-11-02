@@ -9,6 +9,7 @@ import { requestId } from './middlewares/request-id.middleware';
 import authRoutes from './routes/auth.route';
 import departmentRoutes from './routes/department.route';
 import healthRoutes from './routes/health.route';
+import invitationRoutes from './routes/invitation.route';
 
 const app = express();
 
@@ -24,7 +25,8 @@ app.use(cookieParser()); // fills req.cookies (used by the session guard in Phas
 app.use('/api/v1/health', healthRoutes);
 app.use('/api/v1/departments', departmentRoutes);
 app.use('/api/v1/auth', authRoutes);
-// Phase 3c+: staff invitations, then complaints ...
+app.use('/api/v1/invitations', invitationRoutes);
+// Phase 4+: complaints ...
 
 // error handling goes last
 app.use(notFound);

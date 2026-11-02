@@ -27,3 +27,22 @@ Object.assign(process.env, testVars, {
   PORT: '8080',
   TRUST_PROXY: '0',
 });
+
+// Warm up the Neon connection before the tests start. A sleeping compute or a slow network can make the
+// first connection fail even though the database is fine, so retry a few times with a growing pause.
+const { prisma } = await import('../../src/utils/prisma');
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+let connected = false;
+for (let attempt = 1; attempt <= 6 && !connected; attempt += 1) {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    connected = true;
+  } catch {
+    console.warn(`Neon connection attempt ${attempt} failed, retrying...`);
+    await sleep(3000 * attempt);
+  }
+}
+if (!connected) {
+  throw new Error('Could not reach the Neon test branch after 6 attempts. Check your network and .env.test.');
+}

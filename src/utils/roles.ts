@@ -14,3 +14,5 @@ export const hasAnyRole = (user: AuthUser, roles: readonly string[]) => {
 // Department ids where the user holds a given role (used for department-level authorization).
 export const departmentIdsForRole = (user: AuthUser, role: string) =>
   user.memberships.filter((m) => m.role === role).map((m) => m.departmentId);
+
+export const isFacultyAdmin = (user: AuthUser) => user.facultyRoles.some((f) => f.role === 'FACULTY_ADMIN');
