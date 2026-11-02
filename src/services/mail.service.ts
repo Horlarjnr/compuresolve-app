@@ -56,3 +56,24 @@ export const sendStaffInvitationEmail = (to: string, roleLabel: string, token: s
       `${baseUrl()}/accept-invitation?token=${token}\n\n` +
       `If you were not expecting this, you can ignore this email.`,
   });
+
+export const sendPasswordResetEmail = (to: string, fullName: string, token: string) =>
+  mailer.send({
+    to,
+    subject: 'Reset your CompuResolve password',
+    text:
+      `Hello ${fullName},\n\n` +
+      `We received a request to reset your password. Open this link to choose a new one (valid for 1 hour):\n` +
+      `${baseUrl()}/reset-password?token=${token}\n\n` +
+      `If you did not ask for this, ignore this email. Your password will not change.`,
+  });
+
+export const sendPasswordChangedEmail = (to: string, fullName: string) =>
+  mailer.send({
+    to,
+    subject: 'Your CompuResolve password was changed',
+    text:
+      `Hello ${fullName},\n\n` +
+      `The password on your CompuResolve account was just changed.\n\n` +
+      `If this was not you, reset your password straight away using "Forgot password" on the login page.`,
+  });

@@ -5,11 +5,12 @@ import { logger } from '../utils/logger';
 import { hashPassword, verifyPassword } from '../utils/password';
 import { prisma } from '../utils/prisma';
 import { getUserRoles } from '../utils/roles';
-import { EMAIL_VERIFY_TTL_MS, generateToken, hashToken, SESSION_TTL_MS } from '../utils/token';
+import { EMAIL_VERIFY_TTL_MS, generateToken, hashToken, PASSWORD_RESET_TTL_MS, SESSION_TTL_MS } from '../utils/token';
 import { publicUserSelect } from '../utils/user-select';
-import { sendVerificationEmail } from './mail.service';
+import { sendPasswordChangedEmail, sendPasswordResetEmail, sendVerificationEmail } from './mail.service';
 
 const RESEND_COOLDOWN_MS = 60 * 1000;
+const RESET_COOLDOWN_MS = 60 * 1000;
 
 // What the client receives about a signed-in user: public fields + a simple list of role names.
 export const presentUser = (user: AuthUser) => ({ ...user, roles: Array.from(getUserRoles(user)) });
@@ -145,4 +146,94 @@ export const login = async (email: string, password: string) => {
 
 export const logout = async (token: string) => {
   await prisma.session.deleteMany({ where: { tokenHash: hashToken(token) } });
+};
+
+// A failed notice email must never undo a successful password change.
+const sendPasswordChangedSafely = async (userId: string, email: string, fullName: string) => {
+  try {
+    await sendPasswordChangedEmail(email, fullName);
+  } catch (error) {
+    logger.error(`Could not send password-changed notice for user ${userId}: ${(error as Error).message}`);
+  }
+};
+
+// Always returns nothing, and the controller always sends the same reply, so this cannot be used
+// to discover which emails are registered.
+export const forgotPassword = async (email: string) => {
+  const user = await prisma.user.findUnique({
+    where: { email },
+    select: { id: true, fullName: true, email: true, isActive: true },
+  });
+  if (!user || !user.isActive) return;
+
+  const latest = await prisma.passwordResetToken.findFirst({
+    where: { userId: user.id, usedAt: null },
+    orderBy: { createdAt: 'desc' },
+    select: { createdAt: true },
+  });
+  if (latest && Date.now() - latest.createdAt.getTime() < RESET_COOLDOWN_MS) return;
+
+  const rawToken = generateToken();
+  await prisma.$transaction([
+    prisma.passwordResetToken.deleteMany({ where: { userId: user.id, usedAt: null } }), // older links stop working
+    prisma.passwordResetToken.create({
+      data: { userId: user.id, tokenHash: hashToken(rawToken), expiresAt: new Date(Date.now() + PASSWORD_RESET_TTL_MS) },
+    }),
+  ]);
+
+  try {
+    await sendPasswordResetEmail(user.email, user.fullName, rawToken);
+  } catch (error) {
+    logger.error(`Could not send password reset email for user ${user.id}: ${(error as Error).message}`);
+  }
+};
+
+export const resetPassword = async (token: string, newPassword: string) => {
+  const now = new Date();
+  const record = await prisma.passwordResetToken.findFirst({
+    where: { tokenHash: hashToken(token), usedAt: null, expiresAt: { gt: now }, user: { isActive: true } },
+    select: { id: true, userId: true, user: { select: { email: true, fullName: true } } },
+  });
+  if (!record) throw createError(400, 'Invalid or expired reset link', 'INVALID_TOKEN');
+
+  const passwordHash = await hashPassword(newPassword);
+  await prisma.$transaction(async (tx) => {
+    // Claim the link first so it can only be used once, even with two simultaneous requests.
+    const claimed = await tx.passwordResetToken.updateMany({
+      where: { id: record.id, usedAt: null },
+      data: { usedAt: now },
+    });
+    if (claimed.count !== 1) throw createError(400, 'Invalid or expired reset link', 'INVALID_TOKEN');
+
+    await tx.passwordResetToken.updateMany({ where: { userId: record.userId, usedAt: null }, data: { usedAt: now } });
+    await tx.user.update({ where: { id: record.userId }, data: { passwordHash } });
+    // The link reached this inbox, so the address is proven: this also rescues unverified accounts.
+    await tx.user.updateMany({ where: { id: record.userId, emailVerifiedAt: null }, data: { emailVerifiedAt: now } });
+    // Whoever knew the old password is signed out everywhere.
+    await tx.session.deleteMany({ where: { userId: record.userId } });
+  });
+
+  await sendPasswordChangedSafely(record.userId, record.user.email, record.user.fullName);
+};
+
+export const changePassword = async (
+  user: AuthUser,
+  currentSessionToken: string,
+  currentPassword: string,
+  newPassword: string,
+) => {
+  const record = await prisma.user.findUnique({ where: { id: user.id }, select: { passwordHash: true } });
+  if (!(await verifyPassword(currentPassword, record?.passwordHash))) {
+    throw createError(401, 'Current password is incorrect', 'INVALID_CREDENTIALS');
+  }
+
+  const passwordHash = await hashPassword(newPassword);
+  await prisma.$transaction([
+    prisma.user.update({ where: { id: user.id }, data: { passwordHash } }),
+    // Sign out every OTHER device; this session stays.
+    prisma.session.deleteMany({ where: { userId: user.id, tokenHash: { not: hashToken(currentSessionToken) } } }),
+    prisma.passwordResetToken.updateMany({ where: { userId: user.id, usedAt: null }, data: { usedAt: new Date() } }),
+  ]);
+
+  await sendPasswordChangedSafely(user.id, user.email, user.fullName);
 };

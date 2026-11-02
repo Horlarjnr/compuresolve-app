@@ -125,6 +125,7 @@ model User {
   studentProfile        StudentProfile?
   sessions              Session[]
   emailVerificationTokens EmailVerificationToken[]
+  passwordResetTokens   PasswordResetToken[]
   invitationsSent       StaffInvitation[]        @relation("InvitationInviter")
   createdAt             DateTime                 @default(now())
   updatedAt             DateTime                 @updatedAt
@@ -408,4 +409,17 @@ model StaffInvitation {
 
   @@index([email])
   @@index([departmentId, requestedRole])
+}
+
+// One-time password reset link (valid 1 hour). Only a hash of the token is stored.
+model PasswordResetToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
 }

@@ -19,7 +19,7 @@ import { prisma } from '../../src/utils/prisma';
 
 const PASSWORD = 'Str0ng!Pass#';
 const DOMAIN = '@invite.invalid';
-const CODES = ['INVA', 'INVB'];
+const CODES = ['INVA', 'INVB', 'INVC', 'INVD', 'INVE'];
 const ADMIN = `admin${DOMAIN}`;
 const HOD_A = `hoda${DOMAIN}`;
 const HOD_B = `hodb${DOMAIN}`;
@@ -28,6 +28,9 @@ const STUDENT = `student${DOMAIN}`;
 
 let deptA = '';
 let deptB = '';
+let deptC = '';
+let deptD = '';
+let deptE = '';
 let seq = 0;
 const cookies: Record<string, string> = {};
 
@@ -61,6 +64,17 @@ beforeAll(async () => {
   });
   deptA = a.id;
   deptB = b.id;
+  // C, D and E start with no HOD, for the one-HOD-per-department tests.
+  const extra: string[] = [];
+  for (const letter of ['C', 'D', 'E']) {
+    const d = await prisma.department.upsert({
+      where: { name: `Invite Test Dept ${letter}` },
+      update: { isActive: true },
+      create: { name: `Invite Test Dept ${letter}`, code: `INV${letter}` },
+    });
+    extra.push(d.id);
+  }
+  [deptC, deptD, deptE] = extra;
 
   const passwordHash = await hashPassword(PASSWORD);
   const base = { passwordHash, emailVerifiedAt: new Date() };
@@ -160,7 +174,7 @@ describe('creating invitations', () => {
 
   test('Faculty Admin invites an Officer, an HOD and another Faculty Admin', async () => {
     expect((await invite(ADMIN, { email: newEmail(), role: 'OFFICER', departmentId: deptB })).status).toBe(201);
-    expect((await invite(ADMIN, { email: newEmail(), role: 'HOD', departmentId: deptB })).status).toBe(201);
+    expect((await invite(ADMIN, { email: newEmail(), role: 'HOD', departmentId: deptC })).status).toBe(201);
     const fa = await invite(ADMIN, { email: newEmail(), role: 'FACULTY_ADMIN' });
     expect(fa.status).toBe(201);
     expect(fa.body.data.role).toBe('FACULTY_ADMIN');
@@ -223,7 +237,7 @@ describe('listing and revoking are limited to your scope', () => {
   });
 
   test('HOD A sees only Officer invitations for their own department', async () => {
-    await invite(ADMIN, { email: newEmail(), role: 'HOD', departmentId: deptA });
+    await invite(ADMIN, { email: newEmail(), role: 'HOD', departmentId: deptD });
     const asA = await list(HOD_A);
     for (const item of asA.body.data) {
       expect(item.role).toBe('OFFICER');
@@ -334,5 +348,47 @@ describe('accepting an invitation', () => {
     const right = await accept({ token, password: PASSWORD });
     expect(right.status).toBe(201);
     expect(await prisma.departmentMembership.count({ where: { user: { email: OFFICER_A } } })).toBe(2);
+  });
+});
+
+describe('one Head of Department per department', () => {
+  test('cannot invite a HOD where one is already active', async () => {
+    const res = await invite(ADMIN, { email: newEmail(), role: 'HOD', departmentId: deptA });
+    expect(res.status).toBe(409);
+    expect(res.body.code).toBe('HOD_EXISTS');
+  });
+
+  test('cannot have two pending HOD invitations for the same department', async () => {
+    await invite(ADMIN, { email: newEmail(), role: 'HOD', departmentId: deptC }); // makes sure one is pending (201 or 409)
+    const res = await invite(ADMIN, { email: newEmail(), role: 'HOD', departmentId: deptC });
+    expect(res.status).toBe(409);
+    expect(res.body.code).toBe('DUPLICATE_INVITATION');
+  });
+
+  test('accepting is refused if a HOD became active in the meantime, and the invitation stays usable', async () => {
+    const created = await invite(ADMIN, { email: newEmail(), role: 'HOD', departmentId: deptE });
+    expect(created.status).toBe(201);
+    const token = mail.lastToken;
+
+    const other = await prisma.user.findUniqueOrThrow({ where: { email: OFFICER_A } });
+    await prisma.departmentMembership.create({
+      data: { userId: other.id, departmentId: deptE, role: 'HOD', status: 'ACTIVE' },
+    });
+
+    const res = await accept({ token, fullName: 'Second Hod', password: PASSWORD });
+    expect(res.status).toBe(409);
+    expect(res.body.code).toBe('HOD_EXISTS');
+    const row = await prisma.staffInvitation.findUnique({ where: { id: created.body.data.id } });
+    expect(row!.acceptedAt).toBeNull(); // the failed accept rolled back completely
+  });
+
+  test('the database itself refuses a second active HOD', async () => {
+    // The admin has no membership in department A, so only the one-HOD index can stop this insert.
+    const admin = await prisma.user.findUniqueOrThrow({ where: { email: ADMIN } });
+    await expect(
+      prisma.departmentMembership.create({
+        data: { userId: admin.id, departmentId: deptA, role: 'HOD', status: 'ACTIVE' },
+      }),
+    ).rejects.toThrow();
   });
 });

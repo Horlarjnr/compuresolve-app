@@ -129,6 +129,29 @@ export const createInvitation = async (actor: AuthUser, input: CreateInvitationI
   });
   if (existing) assertEligible(existing, target);
 
+  // One Head of Department per department: refuse if one is active or an invitation is already pending.
+  if (target.requestedRole === 'HOD' && target.departmentId) {
+    const activeHod = await prisma.departmentMembership.findFirst({
+      where: { departmentId: target.departmentId, role: 'HOD', status: 'ACTIVE' },
+      select: { id: true },
+    });
+    if (activeHod) throw createError(409, 'This department already has a Head of Department', 'HOD_EXISTS');
+
+    const pendingHod = await prisma.staffInvitation.findFirst({
+      where: {
+        departmentId: target.departmentId,
+        requestedRole: 'HOD',
+        acceptedAt: null,
+        revokedAt: null,
+        expiresAt: { gt: new Date() },
+      },
+      select: { id: true },
+    });
+    if (pendingHod) {
+      throw createError(409, 'A Head of Department invitation is already pending for this department', 'DUPLICATE_INVITATION');
+    }
+  }
+
   const duplicate = await prisma.staffInvitation.findFirst({
     where: {
       email: input.email,
@@ -306,6 +329,14 @@ export const acceptInvitation = async (input: AcceptInvitationInput) => {
       userId = created.id;
     }
 
+    if (target.requestedRole === 'HOD') {
+      // Checked inside the transaction (a unique database index also guards against a simultaneous accept).
+      const activeHod = await tx.departmentMembership.findFirst({
+        where: { departmentId: target.departmentId!, role: 'HOD', status: 'ACTIVE' },
+        select: { id: true },
+      });
+      if (activeHod) throw createError(409, 'This department already has a Head of Department', 'HOD_EXISTS');
+    }
     if (target.requestedRole) {
       await tx.departmentMembership.create({
         data: { userId, departmentId: target.departmentId!, role: target.requestedRole, status: 'ACTIVE' },

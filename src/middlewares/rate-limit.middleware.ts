@@ -19,3 +19,6 @@ export const registerLimiter = createRateLimiter({ windowMs: 60 * MINUTE, limit:
 export const resendVerificationLimiter = createRateLimiter({ windowMs: 60 * MINUTE, limit: inTests ? 10_000 : 3 });
 export const createInvitationLimiter = createRateLimiter({ windowMs: 60 * MINUTE, limit: inTests ? 10_000 : 30 });
 export const acceptInvitationLimiter = createRateLimiter({ windowMs: 15 * MINUTE, limit: inTests ? 10_000 : 10 });
+export const forgotPasswordLimiter = createRateLimiter({ windowMs: 60 * MINUTE, limit: inTests ? 10_000 : 3 });
+export const resetPasswordLimiter = createRateLimiter({ windowMs: 60 * MINUTE, limit: inTests ? 10_000 : 10 });
+export const changePasswordLimiter = createRateLimiter({ windowMs: 15 * MINUTE, limit: inTests ? 10_000 : 5 });

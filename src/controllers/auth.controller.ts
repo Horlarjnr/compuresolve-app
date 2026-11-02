@@ -1,5 +1,15 @@
 import type { NextFunction, Request, Response } from 'express';
-import { login, logout, presentUser, registerStudent, resendVerification, verifyEmail } from '../services/auth.service';
+import {
+  changePassword,
+  forgotPassword,
+  login,
+  logout,
+  presentUser,
+  registerStudent,
+  resendVerification,
+  resetPassword,
+  verifyEmail,
+} from '../services/auth.service';
 import { CLEAR_COOKIE_OPTS, COOKIE_OPTS, SESSION_COOKIE } from '../utils/token';
 
 export const register = async (req: Request, res: Response, next: NextFunction) => {
@@ -62,4 +72,35 @@ export const logoutUser = async (req: Request, res: Response, next: NextFunction
 
 export const getMe = (req: Request, res: Response) => {
   res.status(200).json({ success: true, data: presentUser(req.user!) });
+};
+
+export const forgotPasswordHandler = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    await forgotPassword(req.body.email);
+    // Same answer whether or not the email exists.
+    res.status(200).json({
+      success: true,
+      message: 'If an account exists for that email, a password reset link has been sent.',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const resetPasswordHandler = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    await resetPassword(req.body.token, req.body.newPassword);
+    res.status(200).json({ success: true, message: 'Password updated. Please log in with your new password.' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const changePasswordHandler = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    await changePassword(req.user!, req.cookies[SESSION_COOKIE], req.body.currentPassword, req.body.newPassword);
+    res.status(200).json({ success: true, message: 'Password changed. Your other devices were signed out.' });
+  } catch (error) {
+    next(error);
+  }
 };

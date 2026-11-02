@@ -32,4 +32,16 @@ export const resendVerificationSchema = z.object({ email }).strict();
 
 export const loginSchema = z.object({ email, password: z.string().min(1).max(200) }).strict();
 
+export const forgotPasswordSchema = z.object({ email }).strict();
+
+export const resetPasswordSchema = z.object({ token: z.string().min(20).max(200), newPassword: passwordSchema }).strict();
+
+export const changePasswordSchema = z
+  .object({ currentPassword: z.string().min(1).max(200), newPassword: passwordSchema })
+  .strict()
+  .refine((v) => v.newPassword !== v.currentPassword, {
+    path: ['newPassword'],
+    message: 'New password must be different from the current one',
+  });
+
 export type RegisterInput = z.infer<typeof registerSchema>;

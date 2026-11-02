@@ -4,6 +4,7 @@ export const SESSION_COOKIE = 'sid';
 export const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 export const EMAIL_VERIFY_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 export const INVITATION_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+export const PASSWORD_RESET_TTL_MS = 60 * 60 * 1000; // 1 hour
 
 // Random token: goes into the cookie or an emailed link.
 export const generateToken = () => randomBytes(32).toString('hex');
