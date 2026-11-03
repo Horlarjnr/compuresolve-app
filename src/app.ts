@@ -7,6 +7,8 @@ import { env } from './config/env';
 import { errorHandler, notFound } from './middlewares/error.middleware';
 import { requestId } from './middlewares/request-id.middleware';
 import authRoutes from './routes/auth.route';
+import categoryRoutes from './routes/category.route';
+import complaintRoutes from './routes/complaint.route';
 import departmentRoutes from './routes/department.route';
 import healthRoutes from './routes/health.route';
 import invitationRoutes from './routes/invitation.route';
@@ -26,7 +28,9 @@ app.use('/api/v1/health', healthRoutes);
 app.use('/api/v1/departments', departmentRoutes);
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/invitations', invitationRoutes);
-// Phase 4+: complaints ...
+app.use('/api/v1/categories', categoryRoutes);
+app.use('/api/v1/complaints', complaintRoutes);
+// Phase 6+: messages, notifications ...
 
 // error handling goes last
 app.use(notFound);

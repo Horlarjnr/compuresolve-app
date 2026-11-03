@@ -30,6 +30,15 @@ export const canViewComplaint = (user: AuthUser, complaint: ComplaintAccessField
   return false;
 };
 
+// True when the viewer is looking at it as STAFF (department staff, or Faculty Admin for faculty/escalated cases).
+// Staff see who submitted it and who is handling it. The submitter does not see staff identities.
+export const canViewComplaintAsStaff = (user: AuthUser, complaint: ComplaintAccessFields): boolean => {
+  if (complaint.scope === 'DEPARTMENT' && complaint.departmentId) {
+    if (staffDepartmentIds(user).includes(complaint.departmentId)) return true;
+  }
+  return isFacultyAdmin(user) && (complaint.scope === 'FACULTY' || complaint.escalatedToFaculty);
+};
+
 // For LISTS: a Prisma `where` that matches exactly the complaints canViewComplaint allows.
 // Always combine it with other filters using AND, never replace it.
 export const complaintScopeWhere = (user: AuthUser) => {

@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { canViewComplaint, complaintScopeWhere } from '../src/policies/complaint.policy';
+import { canViewComplaint, canViewComplaintAsStaff, complaintScopeWhere } from '../src/policies/complaint.policy';
 import { canManageMembership, canViewDepartmentMembers } from '../src/policies/department.policy';
 import type { AuthUser } from '../src/types/express';
 
@@ -115,5 +115,22 @@ describe('department policy', () => {
     expect(canManageMembership(admin, { departmentId: B, role: 'OFFICER' })).toBe(true);
     expect(canManageMembership(admin, { departmentId: A, role: 'STUDENT' })).toBe(false);
     expect(canManageMembership(officerA, { departmentId: A, role: 'OFFICER' })).toBe(false);
+  });
+});
+
+describe('canViewComplaintAsStaff', () => {
+  test('the submitter is not staff for their own complaint', () => {
+    expect(canViewComplaintAsStaff(student, complaint({ submittedById: 's1' }))).toBe(false);
+  });
+
+  test('department staff are staff only for their own department', () => {
+    expect(canViewComplaintAsStaff(officerA, complaint({ departmentId: A }))).toBe(true);
+    expect(canViewComplaintAsStaff(hodA, complaint({ departmentId: B }))).toBe(false);
+  });
+
+  test('the Faculty Admin is staff only for faculty-level or escalated cases', () => {
+    expect(canViewComplaintAsStaff(admin, complaint({ scope: 'FACULTY', departmentId: null }))).toBe(true);
+    expect(canViewComplaintAsStaff(admin, complaint({ escalatedToFaculty: true }))).toBe(true);
+    expect(canViewComplaintAsStaff(admin, complaint())).toBe(false);
   });
 });
