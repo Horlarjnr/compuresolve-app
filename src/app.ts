@@ -12,6 +12,7 @@ import complaintRoutes from './routes/complaint.route';
 import departmentRoutes from './routes/department.route';
 import healthRoutes from './routes/health.route';
 import invitationRoutes from './routes/invitation.route';
+import reopenRoutes from './routes/reopen.route';
 
 const app = express();
 
@@ -30,6 +31,7 @@ app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/invitations', invitationRoutes);
 app.use('/api/v1/categories', categoryRoutes);
 app.use('/api/v1/complaints', complaintRoutes);
+app.use('/api/v1/reopen-requests', reopenRoutes);
 // Phase 6+: messages, notifications ...
 
 // error handling goes last

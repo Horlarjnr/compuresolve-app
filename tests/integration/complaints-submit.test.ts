@@ -254,6 +254,7 @@ describe('who sees which complaints (over HTTP)', () => {
     expect(labelsOf(byCategory).filter((l: string) => l !== 'UNKNOWN')).toEqual(['cA2']);
 
     const paged = await get('officera', '/complaints?limit=1&page=2');
+    expect(paged.status, `paged response: ${JSON.stringify(paged.body)}`).toBe(200); // shows the real error if it fails
     expect(paged.body.data).toHaveLength(1);
     expect(paged.body.meta.total).toBeGreaterThanOrEqual(2);
     expect((await get('officera', '/complaints?limit=1000')).status).toBe(400);

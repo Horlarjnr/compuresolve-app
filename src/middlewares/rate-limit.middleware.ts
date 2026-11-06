@@ -39,3 +39,9 @@ export const complaintLimiter = createRateLimiter({
   limit: inTests ? 10_000 : 10,
   keyGenerator: (req) => req.user!.id,
 });
+
+export const reopenRequestLimiter = createRateLimiter({
+  windowMs: 60 * MINUTE,
+  limit: inTests ? 10_000 : 5,
+  keyGenerator: (req) => req.user!.id,
+});

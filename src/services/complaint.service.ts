@@ -1,4 +1,5 @@
 import { createError } from '../common/errors/app-error';
+import { allowedTransitionsFor, canDecideReopen, REOPENABLE_STATUSES } from '../policies/complaint-workflow';
 import { canViewComplaint, canViewComplaintAsStaff, complaintScopeWhere } from '../policies/complaint.policy';
 import type { AuthUser } from '../types/express';
 import { prisma } from '../utils/prisma';
@@ -32,6 +33,18 @@ const detailSelect = {
   resolutionNote: true,
   resolvedAt: true,
   closedAt: true,
+  reopenRequests: {
+    orderBy: { createdAt: 'asc' as const },
+    select: {
+      id: true,
+      status: true,
+      reason: true,
+      decisionNote: true,
+      decidedAt: true,
+      createdAt: true,
+      decidedBy: { select: { id: true, fullName: true } },
+    },
+  },
   statusHistory: {
     orderBy: { createdAt: 'asc' as const },
     select: {
@@ -69,6 +82,15 @@ type DetailRow = SummaryRow & {
   resolutionNote: string | null;
   resolvedAt: Date | null;
   closedAt: Date | null;
+  reopenRequests: {
+    id: string;
+    status: string;
+    reason: string;
+    decisionNote: string | null;
+    decidedAt: Date | null;
+    createdAt: Date;
+    decidedBy: { id: string; fullName: string } | null;
+  }[];
   statusHistory: {
     id: string;
     fromStatus: string | null;
@@ -106,12 +128,31 @@ const presentSummary = (user: AuthUser, row: SummaryRow) => {
 
 const presentDetail = (user: AuthUser, row: DetailRow) => {
   const staff = canViewComplaintAsStaff(user, row);
+  const hasPendingReopen = row.reopenRequests.some((r) => r.status === 'PENDING');
+  const isSubmitter = row.submittedById === user.id;
   return {
     ...presentSummary(user, row),
     description: row.description,
     resolutionNote: row.resolutionNote,
     resolvedAt: row.resolvedAt,
     closedAt: row.closedAt,
+    // Staff only: the status changes this person may make right now.
+    ...(staff ? { allowedTransitions: allowedTransitionsFor(user, row) } : {}),
+    reopenRequests: row.reopenRequests.map((r) => ({
+      id: r.id,
+      status: r.status,
+      reason: r.reason,
+      decisionNote: r.decisionNote, // written for the student
+      decidedAt: r.decidedAt,
+      createdAt: r.createdAt,
+      ...(staff ? { decidedBy: r.decidedBy } : {}),
+    })),
+    // Submitter: may they ask for a reopen right now?
+    ...(isSubmitter
+      ? { canRequestReopen: (REOPENABLE_STATUSES as string[]).includes(row.status) && !hasPendingReopen }
+      : {}),
+    // Staff: is there a pending request they may decide?
+    ...(staff ? { canDecideReopen: hasPendingReopen && canDecideReopen(user, row) } : {}),
     statusHistory: row.statusHistory.map((h) => ({
       id: h.id,
       fromStatus: h.fromStatus,

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { REASON_REQUIRED_STATUSES } from '../policies/complaint-workflow';
 
 const STATUSES = [
   'SUBMITTED',
@@ -47,3 +48,23 @@ export const listComplaintsQuerySchema = z
 
 export type CreateComplaintInput = z.infer<typeof createComplaintSchema>;
 export type ListComplaintsQuery = z.infer<typeof listComplaintsQuerySchema>;
+
+export const assignComplaintSchema = z.object({ officerId: z.string().uuid('Select a valid officer') }).strict();
+
+export const transitionSchema = z
+  .object({
+    toStatus: z.enum(STATUSES),
+    reason: z.string().trim().min(5, 'Reason is too short').max(2000, 'Reason is too long').optional(),
+  })
+  .strict()
+  .superRefine((v, ctx) => {
+    if ((REASON_REQUIRED_STATUSES as string[]).includes(v.toStatus) && !v.reason) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['reason'],
+        message: 'A reason is required for this change. It will be shown to the student.',
+      });
+    }
+  });
+
+export type TransitionInput = z.infer<typeof transitionSchema>;
