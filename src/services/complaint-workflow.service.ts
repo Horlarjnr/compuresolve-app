@@ -12,9 +12,11 @@ import { prisma } from '../utils/prisma';
 import type { TransitionInput } from '../validators/complaint.validator';
 import { recordAudit } from './audit.service';
 import { getComplaint } from './complaint.service';
+import { notifyAssigned, notifyStatusChanged } from './notification.service';
 
 const workflowSelect = {
   id: true,
+  reference: true,
   scope: true,
   departmentId: true,
   submittedById: true,
@@ -77,6 +79,7 @@ export const assignComplaint = async (actor: AuthUser, complaintId: string, offi
 
     await tx.complaintAssignment.updateMany({ where: { complaintId: c.id, unassignedAt: null }, data: { unassignedAt: now } });
     await tx.complaintAssignment.create({ data: { complaintId: c.id, officerId, assignedById: actor.id } });
+    await notifyAssigned(tx, c, officerId, actor.id);
     await recordAudit(
       {
         actorId: actor.id,
@@ -162,6 +165,8 @@ export const transitionComplaint = async (actor: AuthUser, complaintId: string, 
     await tx.complaintStatusHistory.create({
       data: { complaintId: c.id, actorId: actor.id, fromStatus: c.status, toStatus: to, reason: input.reason ?? null },
     });
+
+    await notifyStatusChanged(tx, c, to, actor.id);
 
     if (to === 'ESCALATED') {
       await tx.complaintAssignment.updateMany({ where: { complaintId: c.id, unassignedAt: null }, data: { unassignedAt: now } });

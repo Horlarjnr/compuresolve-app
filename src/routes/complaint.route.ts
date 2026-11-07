@@ -9,7 +9,8 @@ import {
   unassignComplaintHandler,
 } from '../controllers/complaint.controller';
 import { requireAuth, requireRole } from '../middlewares/auth.middleware';
-import { complaintLimiter, reopenRequestLimiter } from '../middlewares/rate-limit.middleware';
+import { listMessagesHandler, postMessageHandler } from '../controllers/message.controller';
+import { complaintLimiter, messageLimiter, reopenRequestLimiter } from '../middlewares/rate-limit.middleware';
 import { validate } from '../middlewares/validate.middleware';
 import {
   assignComplaintSchema,
@@ -18,6 +19,7 @@ import {
   listComplaintsQuerySchema,
   transitionSchema,
 } from '../validators/complaint.validator';
+import { createMessageSchema, listMessagesQuerySchema } from '../validators/message.validator';
 import { createReopenSchema } from '../validators/reopen.validator';
 
 const router = Router();
@@ -59,6 +61,23 @@ router.post(
   validate(complaintParamsSchema, 'params'),
   validate(createReopenSchema),
   createReopenRequestHandler,
+);
+
+// Messages on a complaint. Who may read or write what is decided in the service (and never shown to the wrong side).
+router.get(
+  '/:complaintId/messages',
+  requireAuth,
+  validate(complaintParamsSchema, 'params'),
+  validate(listMessagesQuerySchema, 'query'),
+  listMessagesHandler,
+);
+router.post(
+  '/:complaintId/messages',
+  requireAuth,
+  messageLimiter,
+  validate(complaintParamsSchema, 'params'),
+  validate(createMessageSchema),
+  postMessageHandler,
 );
 
 export default router;

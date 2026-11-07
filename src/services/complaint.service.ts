@@ -7,6 +7,7 @@ import { generateReference } from '../utils/reference';
 import { departmentIdsForRole } from '../utils/roles';
 import type { CreateComplaintInput, ListComplaintsQuery } from '../validators/complaint.validator';
 import { recordAudit } from './audit.service';
+import { notifyComplaintSubmitted } from './notification.service';
 
 const summarySelect = {
   id: true,
@@ -227,6 +228,13 @@ export const createComplaint = async (user: AuthUser, input: CreateComplaintInpu
           },
           tx,
         );
+        await notifyComplaintSubmitted(tx, {
+          id: row.id,
+          reference: row.reference,
+          scope: target,
+          departmentId,
+          submittedById: user.id,
+        });
         return row;
       });
       return presentDetail(user, created as DetailRow);
@@ -277,4 +285,16 @@ export const getComplaint = async (user: AuthUser, complaintId: string) => {
   // A complaint you may not see looks exactly like one that does not exist.
   if (!row || !canViewComplaint(user, row)) throw createError(404, 'Complaint not found');
   return presentDetail(user, row as DetailRow);
+};
+
+// A short "most recent" list for dashboards. The access rule is ALWAYS the first condition;
+// `extraWhere` can only narrow it. Presented with the same student/staff views as everywhere else.
+export const recentComplaints = async (user: AuthUser, extraWhere: object, take: number) => {
+  const rows = await prisma.complaint.findMany({
+    where: { AND: [complaintScopeWhere(user), extraWhere] },
+    select: summarySelect,
+    orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
+    take,
+  });
+  return rows.map((r) => presentSummary(user, r as SummaryRow));
 };

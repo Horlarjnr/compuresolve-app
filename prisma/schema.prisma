@@ -231,6 +231,7 @@ model Complaint {
   messages       ComplaintMessage[]
   escalations    ComplaintEscalation[]
   reopenRequests ComplaintReopenRequest[]
+  notifications  Notification[]
   createdAt      DateTime                @default(now())
   updatedAt      DateTime                @updatedAt
 
@@ -327,9 +328,13 @@ model Notification {
   body      String           @db.Text
   readAt    DateTime?
   createdAt DateTime         @default(now())
+  // Lets the interface open the right complaint. Opening it still goes through the normal access check.
+  complaintId String?        @db.Uuid
   user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  complaint Complaint?       @relation(fields: [complaintId], references: [id], onDelete: Cascade)
 
   @@index([userId, readAt, createdAt])
+  @@index([complaintId])
 }
 
 model AuditLog {

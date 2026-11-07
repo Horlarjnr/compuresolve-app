@@ -9,9 +9,11 @@ import { requestId } from './middlewares/request-id.middleware';
 import authRoutes from './routes/auth.route';
 import categoryRoutes from './routes/category.route';
 import complaintRoutes from './routes/complaint.route';
+import dashboardRoutes from './routes/dashboard.route';
 import departmentRoutes from './routes/department.route';
 import healthRoutes from './routes/health.route';
 import invitationRoutes from './routes/invitation.route';
+import notificationRoutes from './routes/notification.route';
 import reopenRoutes from './routes/reopen.route';
 
 const app = express();
@@ -32,7 +34,9 @@ app.use('/api/v1/invitations', invitationRoutes);
 app.use('/api/v1/categories', categoryRoutes);
 app.use('/api/v1/complaints', complaintRoutes);
 app.use('/api/v1/reopen-requests', reopenRoutes);
-// Phase 6+: messages, notifications ...
+app.use('/api/v1/notifications', notificationRoutes);
+app.use('/api/v1/dashboard', dashboardRoutes);
+// Phase 8: hardening and deployment
 
 // error handling goes last
 app.use(notFound);

@@ -5,6 +5,7 @@ import {
   getActorRole,
   isTransitionDefined,
   REOPENABLE_STATUSES,
+  STUDENT_MESSAGING_STATUSES,
   targetsFor,
   type ComplaintStatusName,
 } from '../src/policies/complaint-workflow';
@@ -150,5 +151,14 @@ describe('reopening', () => {
     const faculty = c({ scope: 'FACULTY', departmentId: null, status: 'CLOSED' });
     expect(canDecideReopen(admin, faculty)).toBe(true);
     expect(canDecideReopen(hodA, faculty)).toBe(false);
+  });
+});
+
+describe('student messaging window', () => {
+  test('students can write while a complaint is being handled, not after it is resolved, closed or rejected', () => {
+    expect([...STUDENT_MESSAGING_STATUSES].sort()).toEqual(
+      ['AWAITING_STUDENT', 'ESCALATED', 'IN_PROGRESS', 'SUBMITTED', 'UNDER_REVIEW'].sort(),
+    );
+    for (const status of REOPENABLE_STATUSES) expect(STUDENT_MESSAGING_STATUSES).not.toContain(status);
   });
 });

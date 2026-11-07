@@ -6,6 +6,7 @@ import { prisma } from '../utils/prisma';
 import type { ListReopenQuery, ReopenDecisionInput } from '../validators/reopen.validator';
 import { recordAudit } from './audit.service';
 import { getComplaint } from './complaint.service';
+import { notifyReopenDecided, notifyReopenRequested } from './notification.service';
 
 const isReopenable = (status: string) => (REOPENABLE_STATUSES as string[]).includes(status);
 
@@ -13,7 +14,16 @@ const isReopenable = (status: string) => (REOPENABLE_STATUSES as string[]).inclu
 export const createReopenRequest = async (user: AuthUser, complaintId: string, reason: string) => {
   const complaint = await prisma.complaint.findUnique({
     where: { id: complaintId },
-    select: { id: true, submittedById: true, status: true, departmentId: true },
+    select: {
+      id: true,
+      reference: true,
+      scope: true,
+      submittedById: true,
+      status: true,
+      departmentId: true,
+      escalatedToFaculty: true,
+      assignedToId: true,
+    },
   });
   // Only the student who submitted it. Everyone else sees "not found".
   if (!complaint || complaint.submittedById !== user.id) throw createError(404, 'Complaint not found');
@@ -50,6 +60,7 @@ export const createReopenRequest = async (user: AuthUser, complaintId: string, r
       },
       tx,
     );
+    await notifyReopenRequested(tx, complaint);
   });
   return getComplaint(user, complaintId);
 };
@@ -156,6 +167,7 @@ export const decideReopenRequest = async (actor: AuthUser, requestId: string, in
       complaint: {
         select: {
           id: true,
+          reference: true,
           scope: true,
           departmentId: true,
           submittedById: true,
@@ -226,6 +238,7 @@ export const decideReopenRequest = async (actor: AuthUser, requestId: string, in
       },
       tx,
     );
+    await notifyReopenDecided(tx, c, approve, actor.id);
   });
   return getComplaint(actor, c.id);
 };

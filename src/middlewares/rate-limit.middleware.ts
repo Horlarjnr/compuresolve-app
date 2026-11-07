@@ -45,3 +45,9 @@ export const reopenRequestLimiter = createRateLimiter({
   limit: inTests ? 10_000 : 5,
   keyGenerator: (req) => req.user!.id,
 });
+
+export const messageLimiter = createRateLimiter({
+  windowMs: 60 * MINUTE,
+  limit: inTests ? 10_000 : 30,
+  keyGenerator: (req) => req.user!.id,
+});

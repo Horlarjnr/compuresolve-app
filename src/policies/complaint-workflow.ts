@@ -87,3 +87,13 @@ export const canDecideReopen = (user: AuthUser, c: WorkflowComplaint): boolean =
   if (role === 'OFFICER') return c.assignedToId === user.id;
   return true;
 };
+
+// While a complaint is still being handled the student may write to staff. Once it is resolved, closed or
+// rejected the route back is a reopen request, not a message.
+export const STUDENT_MESSAGING_STATUSES: ComplaintStatusName[] = [
+  'SUBMITTED',
+  'UNDER_REVIEW',
+  'AWAITING_STUDENT',
+  'IN_PROGRESS',
+  'ESCALATED',
+];
