@@ -1,6 +1,22 @@
 import type { NextFunction, Request, Response } from 'express';
 import { logger } from '../utils/logger';
 
+// What is safe to write to a log: never a database error's message (it can quote data), never an untrimmed message.
+const safeLogMessage = (err: any) => {
+  if (typeof err?.name === 'string' && err.name.startsWith('PrismaClient')) {
+    return `${err.name}${err.code ? ` ${err.code}` : ''}`;
+  }
+  return String(err?.message ?? '').slice(0, 300);
+};
+
+// Stack frames only (the first stack line repeats the message, so it is left out).
+const stackFrames = (err: any) =>
+  String(err?.stack ?? '')
+    .split('\n')
+    .filter((line) => line.trim().startsWith('at '))
+    .slice(0, 6)
+    .join('\n');
+
 export const notFound = (_req: Request, res: Response) => {
   res.status(404).json({ success: false, message: 'Route not found', code: 'NOT_FOUND' });
 };
@@ -49,9 +65,9 @@ export function errorHandler(err: any, req: Request, res: Response, next: NextFu
     }
   }
 
-  // Full detail (including stack for 500s) goes to the server logs only.
+  // Detail goes to the server logs only, and only the safe parts of it.
   logger.error(
-    `${req.id} ${req.method} ${req.path} -> ${status}: ${err?.message}` + (status >= 500 ? `\n${err?.stack}` : ''),
+    `${req.id} ${req.method} ${req.path} -> ${status}: ${safeLogMessage(err)}` + (status >= 500 ? `\n${stackFrames(err)}` : ''),
   );
 
   if (res.headersSent) return next(err);

@@ -41,7 +41,20 @@ const envSchema = z
           .filter(Boolean),
       )
       .pipe(z.array(originSchema)),
-    TRUST_PROXY: oneOf(['0', '1']).default('0'),
+    // Number of reverse proxies in front of the API (0 = none). Render alone = 1; behind a Vercel rewrite = 2.
+    // Wrong values either blind the rate limiter (everyone shares one IP) or let clients fake their IP.
+    TRUST_PROXY: z.preprocess((v) => (v === '' ? undefined : v), z.coerce.number().int().min(0).max(3).default(0)),
+    // Cookie policy. Same site (or a Vercel rewrite): lax. Frontend and API on different sites: none (needs HTTPS).
+    COOKIE_SAME_SITE: oneOf(['lax', 'strict', 'none']).default('lax'),
+    COOKIE_DOMAIN: z.preprocess(
+      (v) => (v === '' ? undefined : v),
+      z
+        .string()
+        .regex(/^\.?[a-z0-9]([a-z0-9.-]*[a-z0-9])?$/i, 'must be a plain domain name')
+        .optional(),
+    ),
+    // Requests per 15 minutes per IP across the API (health checks excluded). Specific limiters are stricter.
+    GLOBAL_RATE_LIMIT: z.preprocess((v) => (v === '' ? undefined : v), z.coerce.number().int().min(20).max(100000).default(600)),
     // DATABASE_URL = pooled Neon URL used by the running app (required except in tests).
     // DIRECT_URL = direct Neon URL used by Prisma migrations (read by prisma.config.ts).
     DATABASE_URL: optionalPostgresUrl,
@@ -57,6 +70,9 @@ const envSchema = z
   .superRefine((e, ctx) => {
     if (e.NODE_ENV === 'production' && e.FRONTEND_ORIGINS.length === 0) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['FRONTEND_ORIGINS'], message: 'is required in production' });
+    }
+    if (e.COOKIE_SAME_SITE === 'none' && e.NODE_ENV !== 'production') {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['COOKIE_SAME_SITE'], message: "'none' requires HTTPS (production)" });
     }
     if (e.MAIL_MODE === 'smtp') {
       for (const key of ['SMTP_HOST', 'SMTP_USER', 'SMTP_PASS'] as const) {
@@ -84,7 +100,10 @@ export function parseEnv(source: NodeJS.ProcessEnv) {
     isProduction: e.NODE_ENV === 'production',
     port: e.PORT,
     frontendOrigins: e.FRONTEND_ORIGINS.length > 0 ? e.FRONTEND_ORIGINS : ['http://localhost:3000'],
-    trustProxy: e.TRUST_PROXY === '1',
+    trustProxyHops: e.TRUST_PROXY,
+    cookieSameSite: e.COOKIE_SAME_SITE,
+    cookieDomain: e.COOKIE_DOMAIN,
+    globalRateLimit: e.GLOBAL_RATE_LIMIT,
     databaseUrl: e.DATABASE_URL,
     directUrl: e.DIRECT_URL,
     mailMode: e.MAIL_MODE,

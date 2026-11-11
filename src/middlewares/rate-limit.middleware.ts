@@ -24,6 +24,10 @@ export const createRateLimiter = ({
 const MINUTE = 60 * 1000;
 const inTests = env.nodeEnv === 'test'; // keep other tests from tripping the limits
 
+// Safety net for the whole API (health checks are mounted before it). Counted per IP: needs a correct TRUST_PROXY.
+export const globalLimiter = createRateLimiter({ windowMs: 15 * MINUTE, limit: inTests ? 100_000 : env.globalRateLimit });
+export const verifyEmailLimiter = createRateLimiter({ windowMs: 15 * MINUTE, limit: inTests ? 10_000 : 20 });
+
 export const loginLimiter = createRateLimiter({ windowMs: 15 * MINUTE, limit: inTests ? 10_000 : 10 });
 export const registerLimiter = createRateLimiter({ windowMs: 60 * MINUTE, limit: inTests ? 10_000 : 5 });
 export const resendVerificationLimiter = createRateLimiter({ windowMs: 60 * MINUTE, limit: inTests ? 10_000 : 3 });

@@ -88,4 +88,40 @@ describe('parseEnv', () => {
       expect((e as Error).message).not.toContain('oops-value-123');
     }
   });
+
+  test('proxy hops, cookie policy and the global limit have safe defaults', () => {
+    const c = parseEnv({ DATABASE_URL: DB });
+    expect(c.trustProxyHops).toBe(0);
+    expect(c.cookieSameSite).toBe('lax');
+    expect(c.cookieDomain).toBeUndefined();
+    expect(c.globalRateLimit).toBe(600);
+  });
+
+  test('TRUST_PROXY is a number of proxies between 0 and 3', () => {
+    expect(parseEnv({ DATABASE_URL: DB, TRUST_PROXY: '2' }).trustProxyHops).toBe(2);
+    expect(() => parseEnv({ DATABASE_URL: DB, TRUST_PROXY: '5' })).toThrow(/TRUST_PROXY/);
+    expect(() => parseEnv({ DATABASE_URL: DB, TRUST_PROXY: 'yes' })).toThrow(/TRUST_PROXY/);
+  });
+
+  test("SameSite=none is only allowed in production (it needs HTTPS)", () => {
+    expect(() => parseEnv({ DATABASE_URL: DB, COOKIE_SAME_SITE: 'none' })).toThrow(/COOKIE_SAME_SITE/);
+    const prod = parseEnv({
+      NODE_ENV: 'production',
+      DATABASE_URL: DB,
+      FRONTEND_ORIGINS: 'https://app.example.com',
+      MAIL_MODE: 'smtp',
+      SMTP_HOST: 'smtp.gmail.com',
+      SMTP_USER: 'me@gmail.com',
+      SMTP_PASS: 'secret',
+      COOKIE_SAME_SITE: 'none',
+    });
+    expect(prod.cookieSameSite).toBe('none');
+  });
+
+  test('the cookie domain must be a plain domain, and the global limit has sane bounds', () => {
+    expect(parseEnv({ DATABASE_URL: DB, COOKIE_DOMAIN: '.school.edu.ng' }).cookieDomain).toBe('.school.edu.ng');
+    expect(() => parseEnv({ DATABASE_URL: DB, COOKIE_DOMAIN: 'https://school.edu.ng/path' })).toThrow(/COOKIE_DOMAIN/);
+    expect(() => parseEnv({ DATABASE_URL: DB, GLOBAL_RATE_LIMIT: '5' })).toThrow(/GLOBAL_RATE_LIMIT/);
+    expect(parseEnv({ DATABASE_URL: DB, GLOBAL_RATE_LIMIT: '1000' }).globalRateLimit).toBe(1000);
+  });
 });

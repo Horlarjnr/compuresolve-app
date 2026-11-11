@@ -18,6 +18,7 @@ import {
   registerLimiter,
   resendVerificationLimiter,
   resetPasswordLimiter,
+  verifyEmailLimiter,
 } from '../middlewares/rate-limit.middleware';
 import { validate } from '../middlewares/validate.middleware';
 import {
@@ -33,7 +34,7 @@ import {
 const router = Router();
 
 router.post('/register', registerLimiter, validate(registerSchema), register); // students only
-router.post('/verify-email', validate(verifyEmailSchema), verifyEmailHandler);
+router.post('/verify-email', verifyEmailLimiter, validate(verifyEmailSchema), verifyEmailHandler);
 router.post('/resend-verification', resendVerificationLimiter, validate(resendVerificationSchema), resendVerificationHandler);
 router.post('/login', loginLimiter, validate(loginSchema), loginUser);
 router.post('/logout', logoutUser);

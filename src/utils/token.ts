@@ -1,4 +1,5 @@
 import { createHash, randomBytes } from 'node:crypto';
+import { env } from '../config/env';
 
 export const SESSION_COOKIE = 'sid';
 export const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -14,9 +15,10 @@ export const hashToken = (token: string) => createHash('sha256').update(token).d
 
 const baseCookieOptions = {
   httpOnly: true, // JavaScript in the browser cannot read it
-  sameSite: 'lax' as const,
-  secure: process.env.NODE_ENV === 'production', // HTTPS only in production
+  sameSite: env.cookieSameSite, // 'lax' by default; 'none' only for a frontend on a different site
+  secure: env.isProduction || env.cookieSameSite === 'none', // HTTPS only in production
   path: '/',
+  ...(env.cookieDomain ? { domain: env.cookieDomain } : {}),
 };
 
 // Used when setting the cookie at login.
