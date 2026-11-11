@@ -1,0 +1,55 @@
+# Runs on every push to main and on every pull request. Needs no secrets.
+# Place this file at: .github/workflows/ci.yml in the ROOT of the repository (the folder that contains package.json).
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch: # also lets you start the database tests by hand (see the second job)
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    env:
+      # Unit tests never open a database connection; the app only needs a valid-looking URL to start.
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npm run typecheck
+      - run: npm test
+      - name: Dependency audit (reports problems, does not block)
+        run: npm audit --audit-level=high
+        continue-on-error: true
+
+  # Manual only: Actions tab > CI > Run workflow. Uses your Neon TEST branch (never dev or production).
+  # Needs two repository secrets: TEST_DATABASE_URL (pooled) and TEST_DIRECT_URL (direct), both for the TEST branch.
+  db-tests:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Create .env.test from secrets
+        env:
+          TEST_DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
+          TEST_DIRECT_URL: ${{ secrets.TEST_DIRECT_URL }}
+        run: |
+          printf 'DATABASE_URL="%s"\nDIRECT_URL="%s"\n' "$TEST_DATABASE_URL" "$TEST_DIRECT_URL" > .env.test
+      - name: Generate client and apply migrations to the TEST branch
+        env:
+          DOTENV_CONFIG_PATH: .env.test
+        run: |
+          npx prisma generate
+          npx prisma migrate deploy
+      - run: npm run test:db

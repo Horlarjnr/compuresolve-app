@@ -1,0 +1,24 @@
+# Nightly cleanup of expired sessions and old tokens (see docs/DEPLOYMENT.md).
+# Needs ONE repository secret: PRODUCTION_DATABASE_URL (the app's pooled connection string for the production database).
+# This is an alternative to a paid Render cron job.
+name: Nightly cleanup
+
+on:
+  schedule:
+    - cron: '0 3 * * *' # 03:00 UTC every day
+  workflow_dispatch:
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npm run db:cleanup

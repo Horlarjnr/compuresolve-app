@@ -11,6 +11,7 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:seed": "prisma db seed",
+    "loadtest": "tsx scripts/load-test.ts",
     "db:studio": "prisma studio",
     "db:cleanup": "tsx scripts/cleanup.ts",
     "typecheck": "tsc --noEmit",
@@ -44,5 +45,11 @@
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
     "vitest": "^3.2.4"
+  },
+
+  "engines": { 
+
+    "node": ">=22" 
+  
   }
 }
