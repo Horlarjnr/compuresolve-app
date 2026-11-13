@@ -10,6 +10,7 @@
     "test": "vitest run",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
+    "mail:test": "tsx scripts/mail-test.ts",
     "db:seed": "prisma db seed",
     "loadtest": "tsx scripts/load-test.ts",
     "db:studio": "prisma studio",

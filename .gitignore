@@ -9,5 +9,10 @@ logs/
 dist/
 coverage/
 
+# Next.js frontend build output
+.next/
+next-env.d.ts
+.vercel/
+
 # Prisma generated client (Phase 2)
 /generated/prisma
