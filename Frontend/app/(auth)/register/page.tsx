@@ -76,8 +76,8 @@ export default function RegisterPage() {
     <AuthLayout title="Create your account" subtitle="Student accounts only. Staff join by invitation." footer={<>Already registered? <Link href="/login" className="font-medium text-soft hover:underline">Sign in</Link></>}>
       <form onSubmit={submit} className="space-y-4" noValidate>
         {formError && <Banner tone="error">{formError}</Banner>}
-        <Input label="Full name" value={f.fullName} onChange={set('fullName')} error={errors.fullName} autoComplete="name" />
-        <Input label="Email" type="email" value={f.email} onChange={set('email')} error={errors.email} autoComplete="email" />
+        <Input label="Full name" value={f.fullName} onChange={set('fullName')} error={errors.fullName} autoComplete="name" placeholder="e.g. Ada Okafor" />
+        <Input label="Email" type="email" value={f.email} onChange={set('email')} error={errors.email} autoComplete="email" placeholder="you@example.com" />
         <Input label="Matric number" value={f.matricNumber} onChange={set('matricNumber')} error={errors.matricNumber} placeholder="CSC/2021/045" />
         <Select label="Department" value={f.departmentId} onChange={set('departmentId')} error={errors.departmentId}>
           <option value="">Select your department</option>
@@ -87,8 +87,8 @@ export default function RegisterPage() {
           <option value="">Select your level</option>
           {LEVELS.map((l) => <option key={l} value={l}>{l} level</option>)}
         </Select>
-        <PasswordInput label="Password" value={f.password} onChange={set('password')} error={errors.password} hint="10+ characters with upper, lower, number and symbol, or a passphrase of 3+ words." autoComplete="new-password" />
-        <PasswordInput label="Confirm password" value={f.confirm} onChange={set('confirm')} error={errors.confirm} autoComplete="new-password" />
+        <PasswordInput label="Password" value={f.password} onChange={set('password')} error={errors.password} placeholder="Create a password" hint="10+ characters with upper, lower, number and symbol, or a passphrase of 3+ words." autoComplete="new-password" />
+        <PasswordInput label="Confirm password" value={f.confirm} onChange={set('confirm')} error={errors.confirm} autoComplete="new-password" placeholder="Re-enter your password" />
         <Button type="submit" size="lg" full loading={busy}>Create account</Button>
       </form>
     </AuthLayout>

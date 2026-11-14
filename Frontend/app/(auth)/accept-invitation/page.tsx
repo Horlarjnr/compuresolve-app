@@ -55,12 +55,13 @@ export default function AcceptInvitationPage() {
       ) : (
         <form onSubmit={submit} className="space-y-5" noValidate>
           {formError && <Banner tone="error">{formError}</Banner>}
-          {!existing && <Input label="Full name" value={fullName} onChange={(e) => setFullName(e.target.value)} error={errors.fullName} autoComplete="name" />}
+          {!existing && <Input label="Full name" value={fullName} onChange={(e) => setFullName(e.target.value)} error={errors.fullName} autoComplete="name" placeholder="e.g. Ada Okafor" />}
           <PasswordInput
             label={existing ? 'Your current password' : 'Choose a password'}
             value={pw}
             onChange={(e) => setPw(e.target.value)}
             error={errors.password}
+            placeholder={existing ? 'Enter your current password' : 'Create a password'}
             hint={existing ? undefined : '10+ characters with upper, lower, number and symbol, or a passphrase of 3+ words.'}
             autoComplete={existing ? 'current-password' : 'new-password'}
           />

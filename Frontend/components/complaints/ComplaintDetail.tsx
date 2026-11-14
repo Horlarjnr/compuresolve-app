@@ -276,7 +276,7 @@ export default function ComplaintDetail({ slug, id }: { slug: string; id: string
         title={reasonFor === 'ESCALATED' ? 'Escalate to faculty' : `Change status to ${reasonFor ? statusLabel(reasonFor) : ''}`}
         footer={<><Button variant="secondary" onClick={() => setReasonFor(null)}>Cancel</Button><Button variant={reasonFor === 'ESCALATED' || reasonFor === 'REJECTED' ? 'danger' : 'primary'} loading={busy} onClick={submitReason}>Confirm</Button></>}
       >
-        <Textarea label="Reason" value={reason} onChange={(e) => setReason(e.target.value)} error={reasonErr} hint="The student will see this reason in the complaint history." maxLength={2000} />
+        <Textarea label="Reason" value={reason} onChange={(e) => setReason(e.target.value)} error={reasonErr} placeholder="Briefly explain the reason for this action…" hint="The student will see this reason in the complaint history." maxLength={2000} />
       </Modal>
 
       <Modal
@@ -285,7 +285,7 @@ export default function ComplaintDetail({ slug, id }: { slug: string; id: string
         title="Request to reopen"
         footer={<><Button variant="secondary" onClick={() => setReopenOpen(false)}>Cancel</Button><Button loading={busy} onClick={submitReopen}>Send request</Button></>}
       >
-        <Textarea label="Why should this be reopened?" value={reopenReason} onChange={(e) => setReopenReason(e.target.value)} error={reopenErr} maxLength={2000} />
+        <Textarea label="Why should this be reopened?" value={reopenReason} onChange={(e) => setReopenReason(e.target.value)} error={reopenErr} maxLength={2000} placeholder="Explain why this complaint should be reopened…" />
       </Modal>
 
       <Modal
@@ -294,7 +294,7 @@ export default function ComplaintDetail({ slug, id }: { slug: string; id: string
         title={decision === 'APPROVE' ? 'Approve reopen request' : 'Reject reopen request'}
         footer={<><Button variant="secondary" onClick={() => setDecision(null)}>Cancel</Button><Button variant={decision === 'REJECT' ? 'danger' : 'primary'} loading={busy} onClick={submitDecision}>{decision === 'APPROVE' ? 'Approve' : 'Reject'}</Button></>}
       >
-        <Textarea label={decision === 'REJECT' ? 'Note to the student (required)' : 'Note to the student (optional)'} value={note} onChange={(e) => setNote(e.target.value)} error={noteErr} maxLength={2000} />
+        <Textarea label={decision === 'REJECT' ? 'Note to the student (required)' : 'Note to the student (optional)'} value={note} onChange={(e) => setNote(e.target.value)} error={noteErr} maxLength={2000} placeholder={decision === 'REJECT' ? 'Explain why this request is being declined…' : 'Add a note for the student (optional)…'} />
       </Modal>
     </>
   );

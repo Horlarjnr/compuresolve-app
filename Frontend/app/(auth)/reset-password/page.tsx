@@ -55,8 +55,8 @@ export default function ResetPasswordPage() {
       ) : (
         <form onSubmit={submit} className="space-y-5" noValidate>
           {formError && <Banner tone="error">{formError}</Banner>}
-          <PasswordInput label="New password" value={pw} onChange={(e) => setPw(e.target.value)} error={errors.newPassword} hint="10+ characters with upper, lower, number and symbol, or a passphrase of 3+ words." autoComplete="new-password" />
-          <PasswordInput label="Confirm new password" value={confirm} onChange={(e) => setConfirm(e.target.value)} error={errors.confirm} autoComplete="new-password" />
+          <PasswordInput label="New password" value={pw} onChange={(e) => setPw(e.target.value)} error={errors.newPassword} placeholder="Create a new password" hint="10+ characters with upper, lower, number and symbol, or a passphrase of 3+ words." autoComplete="new-password" />
+          <PasswordInput label="Confirm new password" value={confirm} onChange={(e) => setConfirm(e.target.value)} error={errors.confirm} autoComplete="new-password" placeholder="Re-enter your new password" />
           <Button type="submit" size="lg" full loading={busy}>Update password</Button>
         </form>
       )}

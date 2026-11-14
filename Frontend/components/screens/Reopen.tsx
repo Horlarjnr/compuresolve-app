@@ -86,7 +86,7 @@ export default function Reopen({ slug }: { slug: string }) {
         title={target?.decision === 'APPROVE' ? 'Approve reopen request' : 'Reject reopen request'}
         footer={<><Button variant="secondary" onClick={() => setTarget(null)}>Cancel</Button><Button variant={target?.decision === 'REJECT' ? 'danger' : 'primary'} loading={busy} onClick={submit}>{target?.decision === 'APPROVE' ? 'Approve' : 'Reject'}</Button></>}
       >
-        <Textarea label={target?.decision === 'REJECT' ? 'Note to the student (required)' : 'Note to the student (optional)'} value={note} onChange={(e) => setNote(e.target.value)} error={noteErr} maxLength={2000} />
+        <Textarea label={target?.decision === 'REJECT' ? 'Note to the student (required)' : 'Note to the student (optional)'} value={note} onChange={(e) => setNote(e.target.value)} error={noteErr} maxLength={2000} placeholder={target?.decision === 'REJECT' ? 'Explain why this request is being declined…' : 'Add a note for the student (optional)…'} />
       </Modal>
     </>
   );

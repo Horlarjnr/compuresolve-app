@@ -87,9 +87,9 @@ export default function Profile({ slug }: { slug: string }) {
             <CardHeader title="Change password" subtitle="You'll stay signed in here; other devices are signed out." />
             <form onSubmit={submit} className="space-y-4" noValidate>
               {formError && <Banner tone="error">{formError}</Banner>}
-              <PasswordInput label="Current password" value={current} onChange={(e) => setCurrent(e.target.value)} error={errors.currentPassword} autoComplete="current-password" />
-              <PasswordInput label="New password" value={next} onChange={(e) => setNext(e.target.value)} error={errors.newPassword} hint="10+ characters with upper, lower, number and symbol, or a passphrase of 3+ words." autoComplete="new-password" />
-              <PasswordInput label="Confirm new password" value={confirm} onChange={(e) => setConfirm(e.target.value)} error={errors.confirm} autoComplete="new-password" />
+              <PasswordInput label="Current password" value={current} onChange={(e) => setCurrent(e.target.value)} error={errors.currentPassword} autoComplete="current-password" placeholder="Enter your current password" />
+              <PasswordInput label="New password" value={next} onChange={(e) => setNext(e.target.value)} error={errors.newPassword} placeholder="Create a new password" hint="10+ characters with upper, lower, number and symbol, or a passphrase of 3+ words." autoComplete="new-password" />
+              <PasswordInput label="Confirm new password" value={confirm} onChange={(e) => setConfirm(e.target.value)} error={errors.confirm} autoComplete="new-password" placeholder="Re-enter your new password" />
               <Button type="submit" loading={busy} full>Update password</Button>
             </form>
           </Card>

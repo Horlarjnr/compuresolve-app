@@ -147,8 +147,8 @@ export default function Departments() {
       <Modal open={open} onClose={() => setOpen(false)} title="New department" footer={<><Button variant="secondary" onClick={() => setOpen(false)}>Cancel</Button><Button loading={busy} onClick={create}>Create department</Button></>}>
         <div className="space-y-4">
           {formError && <Banner tone="error">{formError}</Banner>}
-          <Input label="Department name" value={name} onChange={(e) => setName(e.target.value)} error={errors.name} />
-          <Input label="Code" value={code} onChange={(e) => setCode(e.target.value)} error={errors.code} hint="2-10 letters or digits, e.g. SWE" maxLength={10} />
+          <Input label="Department name" value={name} onChange={(e) => setName(e.target.value)} error={errors.name} placeholder="e.g. Department of Software Engineering" />
+          <Input label="Code" value={code} onChange={(e) => setCode(e.target.value)} error={errors.code} hint="2-10 letters or digits, e.g. SWE" maxLength={10} placeholder="SWE" />
         </div>
       </Modal>
 

@@ -90,7 +90,7 @@ export default function Categories({ slug }: { slug: string }) {
       <Modal open={open} onClose={() => setOpen(false)} title="Add category" footer={<><Button variant="secondary" onClick={() => setOpen(false)}>Cancel</Button><Button loading={busy} onClick={create}>Add category</Button></>}>
         <div className="space-y-4">
           {formError && !nameErr && <Banner tone="error">{formError}</Banner>}
-          <Input label="Category name" value={name} onChange={(e) => setName(e.target.value)} error={nameErr} maxLength={80} autoFocus />
+          <Input label="Category name" value={name} onChange={(e) => setName(e.target.value)} error={nameErr} maxLength={80} autoFocus placeholder="e.g. Course Registration" />
           <p className="text-xs text-muted">{needsDept ? `For ${isAdmin ? departments.find((d) => d.id === deptId)?.name ?? 'the selected department' : departmentName(deptId)}` : 'Available to every department and to faculty-level complaints.'}</p>
         </div>
       </Modal>
