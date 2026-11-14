@@ -59,8 +59,11 @@ const envSchema = z
     // DIRECT_URL = direct Neon URL used by Prisma migrations (read by prisma.config.ts).
     DATABASE_URL: optionalPostgresUrl,
     DIRECT_URL: optionalPostgresUrl,
-    // Email: "console" prints emails in the terminal (development only); "smtp" sends through Gmail.
-    MAIL_MODE: oneOf(['console', 'smtp']).default('console'),
+    // Email: "console" prints emails in the terminal (development only); "brevo" and "resend" send through an HTTPS
+    // API (they work on hosts that block SMTP ports, such as Render's free tier); "smtp" sends through Gmail.
+    MAIL_MODE: oneOf(['console', 'smtp', 'resend', 'brevo']).default('console'),
+    RESEND_API_KEY: optionalString,
+    BREVO_API_KEY: optionalString,
     SMTP_HOST: optionalString,
     SMTP_PORT: z.preprocess((v) => (v === '' ? undefined : v), z.coerce.number().int().min(1).max(65535).default(465)),
     SMTP_USER: optionalString,
@@ -79,8 +82,28 @@ const envSchema = z
         if (!e[key]) ctx.addIssue({ code: z.ZodIssueCode.custom, path: [key], message: 'is required when MAIL_MODE=smtp' });
       }
     }
-    if (e.NODE_ENV === 'production' && e.MAIL_MODE !== 'smtp') {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['MAIL_MODE'], message: 'must be smtp in production' });
+    if (e.MAIL_MODE === 'resend' && !e.RESEND_API_KEY) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['RESEND_API_KEY'], message: 'is required when MAIL_MODE=resend' });
+    }
+    if (e.MAIL_MODE === 'brevo' && !e.BREVO_API_KEY) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['BREVO_API_KEY'], message: 'is required when MAIL_MODE=brevo' });
+    }
+    if (e.MAIL_MODE === 'brevo' && !e.MAIL_FROM) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['MAIL_FROM'],
+        message: 'is required when MAIL_MODE=brevo (use the sender address you verified in Brevo)',
+      });
+    }
+    if (e.NODE_ENV === 'production' && e.MAIL_MODE === 'resend' && !e.MAIL_FROM) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['MAIL_FROM'],
+        message: 'is required in production with MAIL_MODE=resend (use an address on your verified Resend domain)',
+      });
+    }
+    if (e.NODE_ENV === 'production' && e.MAIL_MODE === 'console') {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['MAIL_MODE'], message: 'must be smtp, resend or brevo in production' });
     }
     if (e.NODE_ENV !== 'test' && !e.DATABASE_URL) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['DATABASE_URL'], message: 'is required' });
@@ -107,7 +130,11 @@ export function parseEnv(source: NodeJS.ProcessEnv) {
     databaseUrl: e.DATABASE_URL,
     directUrl: e.DIRECT_URL,
     mailMode: e.MAIL_MODE,
-    mailFrom: e.MAIL_FROM ?? `CompuResolve <${e.SMTP_USER ?? 'no-reply@localhost'}>`,
+    mailFrom:
+      e.MAIL_FROM ??
+      (e.MAIL_MODE === 'resend' ? 'CompuResolve <onboarding@resend.dev>' : `CompuResolve <${e.SMTP_USER ?? 'no-reply@localhost'}>`),
+    resendApiKey: e.MAIL_MODE === 'resend' ? e.RESEND_API_KEY : undefined,
+    brevoApiKey: e.MAIL_MODE === 'brevo' ? e.BREVO_API_KEY : undefined,
     smtp:
       e.MAIL_MODE === 'smtp' && e.SMTP_HOST && e.SMTP_USER && e.SMTP_PASS
         ? { host: e.SMTP_HOST, port: e.SMTP_PORT, user: e.SMTP_USER, pass: e.SMTP_PASS }
