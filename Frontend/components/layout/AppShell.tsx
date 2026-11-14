@@ -124,7 +124,7 @@ function BottomNav({ base, pathname }: { base: string; pathname: string }) {
   const { data: unreadMeta } = useUnread();
   return (
     <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-white md:hidden" aria-label="Student">
-      <ul className="grid grid-cols-4">
+      <ul className="grid grid-cols-5">
         {items.map((n) => {
           const active = pathname === `${base}/${n.href}` || pathname.startsWith(`${base}/${n.href}/`);
           return (

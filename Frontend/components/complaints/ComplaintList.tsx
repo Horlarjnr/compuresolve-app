@@ -1,7 +1,7 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Button, Card, Input, Pagination, SearchInput, Select, StatusBadge, PageHeader, TableSkeleton, Pill, TextLink } from '@/components/ui/primitives';
+import { Button, Card, FilterChips, Input, Pagination, SearchInput, Select, StatusBadge, PageHeader, TableSkeleton, Pill, TextLink } from '@/components/ui/primitives';
 import { DataState, EmptyState } from '@/components/ui/States';
 import { useDebounced, useFetch } from '@/lib/hooks';
 import { STATUSES, STATUS_META } from '@/lib/status';
@@ -61,12 +61,16 @@ export default function ComplaintList({ slug, mode, titleOverride }: { slug: str
         action={mode === 'student' ? <Button href={`/${slug}/submit`} icon="plus">Submit complaint</Button> : undefined}
       />
       <Card pad={false}>
-        <div className="grid gap-3 border-b border-line p-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="border-b border-line px-4 pt-4">
+          <FilterChips
+            label="Filter by status"
+            value={status}
+            onChange={setStatus}
+            options={[{ value: '', label: 'All' }, ...STATUSES.map((s) => ({ value: s, label: STATUS_META[s].label }))]}
+          />
+        </div>
+        <div className="grid gap-3 border-b border-line p-4 sm:grid-cols-2 lg:grid-cols-3">
           <SearchInput value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search title or reference" aria-label="Search" />
-          <Select value={status} onChange={(e) => setStatus(e.target.value)} aria-label="Filter by status">
-            <option value="">All statuses</option>
-            {STATUSES.map((s) => <option key={s} value={s}>{STATUS_META[s].label}</option>)}
-          </Select>
           <Select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} aria-label="Filter by category">
             <option value="">All categories</option>
             {categories.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}

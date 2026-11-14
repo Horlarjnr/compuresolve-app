@@ -20,6 +20,7 @@ export const NAV: Record<string, NavItem[]> = {
     { href: 'dashboard', label: 'Home', icon: 'home', mobile: true },
     { href: 'submit', label: 'Submit Complaint', icon: 'plus', },
     { href: 'complaints', label: 'My Complaints', icon: 'file', mobile: true },
+    { href: 'messages', label: 'Messages', icon: 'message', mobile: true },
     { href: 'notifications', label: 'Notifications', icon: 'bell', mobile: true },
     { href: 'profile', label: 'Profile', icon: 'user', mobile: true },
   ],
@@ -27,6 +28,7 @@ export const NAV: Record<string, NavItem[]> = {
     { href: 'dashboard', label: 'Home', icon: 'home' },
     { href: 'queue', label: 'Department Queue', icon: 'inbox' },
     { href: 'complaints', label: 'My Complaints', icon: 'file' },
+    { href: 'messages', label: 'Messages', icon: 'message' },
     { href: 'reopen', label: 'Reopen Requests', icon: 'refresh' },
     { href: 'notifications', label: 'Notifications', icon: 'bell' },
     { href: 'profile', label: 'Profile', icon: 'user' },
@@ -34,6 +36,7 @@ export const NAV: Record<string, NavItem[]> = {
   hod: [
     { href: 'dashboard', label: 'Home', icon: 'home' },
     { href: 'complaints', label: 'Department Queue', icon: 'inbox' },
+    { href: 'messages', label: 'Messages', icon: 'message' },
     { href: 'staff', label: 'Staff', icon: 'users' },
     { href: 'invitations', label: 'Invitations', icon: 'mail' },
     { href: 'categories', label: 'Categories', icon: 'tag' },
@@ -44,6 +47,7 @@ export const NAV: Record<string, NavItem[]> = {
   admin: [
     { href: 'dashboard', label: 'Dashboard', icon: 'home' },
     { href: 'complaints', label: 'Faculty Overview', icon: 'layers' },
+    { href: 'messages', label: 'Messages', icon: 'message' },
     { href: 'escalated', label: 'Escalated Cases', icon: 'alert' },
     { href: 'reopen', label: 'Reopen Requests', icon: 'refresh' },
     { href: 'departments', label: 'Departments', icon: 'building' },

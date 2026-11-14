@@ -129,6 +129,25 @@ export function SearchInput({ size = 'md', className, ...rest }: Omit<React.Inpu
   );
 }
 
+// A row of pill buttons for quick filtering (scrolls sideways on small screens).
+export function FilterChips({ options, value, onChange, label }: { options: { value: string; label: string }[]; value: string; onChange: (value: string) => void; label: string }) {
+  return (
+    <div role="group" aria-label={label} className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+      {options.map((o) => (
+        <button
+          key={o.value}
+          type="button"
+          aria-pressed={value === o.value}
+          onClick={() => onChange(o.value)}
+          className={cx('shrink-0 rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors', value === o.value ? 'border-forest bg-forest text-white' : 'border-line bg-white text-muted hover:bg-mint/60')}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 // ---------- Cards ----------
 export function Card({ children, className, pad = true }: { children: React.ReactNode; className?: string; pad?: boolean }) {
   return <div className={cx('rounded-2xl border border-line bg-white shadow-card', pad && 'p-5 sm:p-6', className)}>{children}</div>;

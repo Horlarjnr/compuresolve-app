@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { Banner, Button, Card, CardHeader, Modal, Select, Skeleton, StatusBadge, Textarea, Pill, TextLink } from '@/components/ui/primitives';
 import { ErrorFromApi } from '@/components/ui/States';
 import Icon from '@/components/ui/Icon';
-import Chat from './Chat';
 import Timeline from './Timeline';
 import { api, errorMessage, fieldErrors } from '@/lib/api';
 import { useFetch } from '@/lib/hooks';
@@ -59,7 +58,6 @@ export default function ComplaintDetail({ slug, id }: { slug: string; id: string
 
   const transitions: string[] = (c.allowedTransitions ?? []).map(toStatus).filter(Boolean);
   const pendingReopen = (c.reopenRequests ?? []).find((r: any) => r.status === 'PENDING');
-  const chatClosed = !staff && ['CLOSED', 'REJECTED'].includes(c.status);
 
   const run = async (fn: () => Promise<any>, ok: string) => {
     setBusy(true);
@@ -174,8 +172,11 @@ export default function ComplaintDetail({ slug, id }: { slug: string; id: string
           </Card>
 
           <Card>
-            <CardHeader title="Conversation" subtitle={staff ? 'Messages with the student. Internal notes stay with staff.' : 'Messages with the staff handling your complaint.'} />
-            <Chat complaintId={id} staff={staff} closed={chatClosed} />
+            <CardHeader
+              title="Conversation"
+              subtitle={staff ? 'Messages with the student. Internal notes stay with staff.' : 'Messages with the staff handling your complaint.'}
+              action={<Button href={`/${slug}/messages/${id}`} variant="secondary" size="sm" icon="message">Open messages</Button>}
+            />
           </Card>
         </div>
 

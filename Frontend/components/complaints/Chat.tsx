@@ -9,8 +9,8 @@ import { useAuth } from '@/components/providers/AuthProvider';
 import { fmtDateTime } from '@/lib/format';
 import { asList } from '@/lib/util';
 
-// Complaint conversation. Staff may send STAFF_ONLY notes; students never see those (the API filters them out).
-export default function Chat({ complaintId, staff, closed }: { complaintId: string; staff: boolean; closed?: boolean }) {
+// Complaint conversation. With `fill` it stretches to the height of its container (the Messages page). Staff may send STAFF_ONLY notes; students never see those (the API filters them out).
+export default function Chat({ complaintId, staff, closed, fill }: { complaintId: string; staff: boolean; closed?: boolean; fill?: boolean }) {
   const { user } = useAuth();
   const toast = useToast();
   const { data, loading, error, refetch, silentRefetch } = useFetch<any>(`/complaints/${complaintId}/messages`, { query: { limit: 100 }, interval: 15000 });
@@ -42,8 +42,8 @@ export default function Chat({ complaintId, staff, closed }: { complaintId: stri
   };
 
   return (
-    <div className="flex flex-col">
-      <div className="max-h-[420px] min-h-[160px] space-y-4 overflow-y-auto rounded-xl bg-page p-4" aria-live="polite">
+    <div className={cx('flex flex-col', fill && 'h-full min-h-0')}>
+      <div className={cx('space-y-4 overflow-y-auto rounded-xl bg-page p-4', fill ? 'min-h-0 flex-1' : 'max-h-[420px] min-h-[160px]')} aria-live="polite">
         {loading ? (
           <div className="space-y-3"><Skeleton className="h-14 w-2/3" /><Skeleton className="ml-auto h-14 w-2/3" /></div>
         ) : error ? (
