@@ -8,8 +8,8 @@ const cx = (...a: (string | false | null | undefined)[]) => a.filter(Boolean).jo
 
 // ---------- Button ----------
 type BtnProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: 'primary' | 'secondary' | 'danger' | 'ghost' | 'outline-danger';
-  size?: 'sm' | 'md' | 'lg';
+  variant?: 'primary' | 'secondary' | 'danger' | 'ghost' | 'outline-danger' | 'brand' | 'outline-light';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
   loading?: boolean;
   icon?: string;
   href?: string;
@@ -18,13 +18,16 @@ type BtnProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
 export function Button({ variant = 'primary', size = 'md', loading, icon, href, full, children, className, disabled, ...rest }: BtnProps) {
   const base =
     'inline-flex items-center justify-center gap-2 rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed select-none whitespace-nowrap';
-  const sizes = { sm: 'h-9 px-3 text-sm', md: 'h-11 px-5 text-sm', lg: 'h-12 px-6 text-base' };
+  const sizes = { sm: 'h-9 px-3 text-sm', md: 'h-11 px-5 text-sm', lg: 'h-12 px-6 text-base', xl: 'h-12 px-8 text-sm font-semibold' };
   const variants = {
     primary: 'bg-forest text-white hover:bg-soft',
     secondary: 'bg-white text-forest border border-line hover:bg-mint/60',
     danger: 'bg-red-600 text-white hover:bg-red-700',
     'outline-danger': 'bg-white text-red-600 border border-red-200 hover:bg-red-50',
     ghost: 'text-soft hover:bg-mint/60',
+    // Public pages (dark hero): green gradient call to action and a white outline button.
+    brand: 'bg-gradient-to-r from-[#8EB69B] to-[#4FC47F] text-deep font-semibold hover:brightness-110',
+    'outline-light': 'border border-white/60 text-white hover:bg-white/10',
   };
   const classes = cx(base, sizes[size], variants[variant], full && 'w-full', className);
   const content = (
@@ -39,6 +42,12 @@ export function Button({ variant = 'primary', size = 'md', loading, icon, href, 
       {content}
     </button>
   );
+}
+
+// ---------- Text link ----------
+// The small green inline link used in forms, footers and card headers.
+export function TextLink({ href, children, className, ...rest }: { href: string; children: React.ReactNode; className?: string } & Omit<React.ComponentProps<typeof Link>, 'href' | 'className' | 'children'>) {
+  return <Link href={href} className={cx('font-medium text-soft hover:underline', className)} {...rest}>{children}</Link>;
 }
 
 // ---------- Form fields ----------
@@ -107,6 +116,16 @@ export function Textarea({ label, error, hint, className, ...rest }: React.Texta
     <FieldWrap label={label} error={error} hint={hint} htmlFor={id}>
       <textarea id={id} className={cx(inputCls(error), 'py-3 min-h-[120px] resize-y', className)} aria-invalid={!!error} {...rest} />
     </FieldWrap>
+  );
+}
+
+// A search box with the magnifier icon inside. "md" sits on white cards, "sm" is the compact top-bar version.
+export function SearchInput({ size = 'md', className, ...rest }: Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> & { size?: 'sm' | 'md' }) {
+  return (
+    <div className={cx('relative', className)}>
+      <Icon name="search" size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
+      <input type="search" className={cx(inputCls(), 'pr-3 pl-10', size === 'sm' ? 'h-10 bg-page' : 'h-11')} {...rest} />
+    </div>
   );
 }
 

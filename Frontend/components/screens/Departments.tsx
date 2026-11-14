@@ -1,7 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { Banner, Button, Card, ConfirmDialog, Input, Modal, PageHeader, Pill } from '@/components/ui/primitives';
+import { Banner, Button, Card, ConfirmDialog, Input, Modal, PageHeader, Pill, TextLink } from '@/components/ui/primitives';
 import { DataState, EmptyState } from '@/components/ui/States';
 import { useFetch } from '@/lib/hooks';
 import { api, errorMessage, fieldErrors } from '@/lib/api';
@@ -139,7 +138,7 @@ export default function Departments() {
                 </li>
               ))}
             </ul>
-            <p className="mt-4 text-xs text-muted">To add a head of department, <Link href="/admin/invitations" className="font-medium text-soft hover:underline">send an invitation</Link>.</p>
+            <p className="mt-4 text-xs text-muted">To add a head of department, <TextLink href="/admin/invitations">send an invitation</TextLink>.</p>
           </DataState>
         </div>
       </Card>

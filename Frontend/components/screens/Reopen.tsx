@@ -1,7 +1,6 @@
 'use client';
 import React, { useState } from 'react';
-import Link from 'next/link';
-import { Button, Card, Modal, PageHeader, Pill, Pagination, StatusBadge, Tabs, Textarea } from '@/components/ui/primitives';
+import { Button, Card, Modal, PageHeader, Pill, Pagination, StatusBadge, Tabs, Textarea, TextLink } from '@/components/ui/primitives';
 import { DataState, EmptyState } from '@/components/ui/States';
 import { useFetch } from '@/lib/hooks';
 import { api, errorMessage } from '@/lib/api';
@@ -55,7 +54,7 @@ export default function Reopen({ slug }: { slug: string }) {
                 <li key={r.id} className="rounded-xl border border-line p-4">
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <Link href={`/${slug}/complaints/${r.complaint.id}`} className="text-sm font-medium text-soft hover:underline">{r.complaint.reference}</Link>
+                      <TextLink href={`/${slug}/complaints/${r.complaint.id}`} className="text-sm">{r.complaint.reference}</TextLink>
                       <p className="truncate font-medium text-ink">{r.complaint.title}</p>
                       <p className="text-xs text-muted">{r.requester?.fullName}{r.requester?.matricNumber ? ` (${r.requester.matricNumber})` : ''} · {fmtDate(r.createdAt)}</p>
                     </div>

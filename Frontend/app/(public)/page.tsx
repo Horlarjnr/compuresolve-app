@@ -1,16 +1,8 @@
-import Link from 'next/link';
 import type { CSSProperties } from 'react';
-import Logo, { TAGLINE } from '@/components/ui/Brand';
 import Icon from '@/components/ui/Icon';
-
-const NAV = [
-  { label: 'Home', href: '/' },
-  { label: 'About', href: '/about' },
-  { label: 'Features', href: '/#features' },
-  { label: 'How It Works', href: '/#how' },
-  { label: 'FAQ', href: '/about' },
-  { label: 'Contact', href: '/about' },
-];
+import { Button } from '@/components/ui/primitives';
+import { PublicFooter, PublicHeader } from '@/components/layout/PublicChrome';
+import { PUBLIC_WRAP as WRAP } from '@/components/layout/public-nav';
 
 const FEATURES = [
   { icon: 'users', title: 'Multi-Tenant', text: 'Separate departments, secure access.' },
@@ -25,10 +17,6 @@ const STEPS = [
   { icon: 'check-circle', title: '3. Resolve', text: 'Get updates and see the outcome.' },
   { icon: 'chart', title: '4. Improve', text: 'A better faculty for everyone.' },
 ];
-
-const GREEN_BTN = 'bg-gradient-to-r from-[#8EB69B] to-[#4FC47F] text-deep hover:brightness-110';
-// Backgrounds run 100% of the browser width; content sits in this centred container.
-const WRAP = 'mx-auto w-full max-w-[1240px] px-5 sm:px-8 lg:px-10';
 
 const fadeLeft: CSSProperties = {
   WebkitMaskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.55) 20%, #000 46%)',
@@ -70,31 +58,7 @@ export default function Landing() {
           <path d="M270 0 C150 110 110 300 215 440" fill="none" stroke="#8EB69B" strokeOpacity="0.45" strokeWidth="1.5" />
         </svg>
 
-        {/* ---- Nav bar ---- */}
-        <header className="relative z-20 border-b border-white/10">
-          <div className={`${WRAP} flex h-[76px] items-center justify-between`}>
-            <span className="sm:hidden"><Logo variant="dark" size={28} /></span>
-            <span className="hidden sm:block"><Logo variant="dark" size={36} /></span>
-            <div className="flex items-center gap-3 sm:gap-6 lg:gap-9">
-              <nav className="hidden items-center gap-6 text-sm font-medium text-white/90 lg:flex lg:gap-8" aria-label="Main">
-                {NAV.map((n) => (
-                  <Link key={n.label} href={n.href} className="whitespace-nowrap hover:text-light">{n.label}</Link>
-                ))}
-              </nav>
-              <Link href="/login" className={`inline-flex h-9 items-center rounded-lg px-4 text-sm font-semibold sm:h-10 sm:px-6 ${GREEN_BTN}`}>Login</Link>
-              <details className="relative lg:hidden">
-                <summary className="flex h-10 w-10 cursor-pointer list-none items-center justify-center rounded-lg text-white hover:bg-white/10 [&::-webkit-details-marker]:hidden" aria-label="Open menu">
-                  <Icon name="menu" />
-                </summary>
-                <div className="absolute right-0 mt-2 w-52 rounded-2xl bg-white p-2 text-ink shadow-pop">
-                  {NAV.map((n) => (
-                    <Link key={n.label} href={n.href} className="block rounded-xl px-4 py-2.5 text-sm font-medium hover:bg-mint/60">{n.label}</Link>
-                  ))}
-                </div>
-              </details>
-            </div>
-          </div>
-        </header>
+        <PublicHeader variant="overlay" />
 
         {/* ---- Hero ---- */}
         <div className={`${WRAP} relative z-10 pb-12 pt-10 md:flex md:min-h-[480px] md:items-center md:pb-20 md:pt-16`}>
@@ -106,8 +70,8 @@ export default function Landing() {
               The Faculty of Computing complaint resolution system for students, staff and administrators. Submit, track and resolve complaints quickly and transparently.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link href="/register" className={`inline-flex h-12 items-center rounded-lg px-8 text-sm font-semibold ${GREEN_BTN}`}>Get Started</Link>
-              <Link href="/about" className="inline-flex h-12 items-center rounded-lg border border-white/60 px-8 text-sm font-semibold text-white hover:bg-white/10">Learn More</Link>
+              <Button href="/register" variant="brand" size="xl">Get Started</Button>
+              <Button href="/about" variant="outline-light" size="xl">Learn More</Button>
             </div>
           </div>
         </div>
@@ -172,38 +136,12 @@ export default function Landing() {
               <h2 className="text-2xl font-bold sm:text-3xl">Together for a Better Computing Faculty</h2>
               <p className="mt-3 max-w-md text-sm leading-relaxed text-white/85 sm:text-base">Your feedback helps us build a more responsive, transparent and supportive academic environment.</p>
             </div>
-            <Link href="/register" className={`inline-flex h-12 shrink-0 items-center rounded-lg px-8 text-sm font-semibold ${GREEN_BTN}`}>Get Started</Link>
+            <Button href="/register" variant="brand" size="xl" className="shrink-0">Get Started</Button>
           </div>
         </div>
       </section>
 
-      {/* ================= Footer ================= */}
-      <footer className="bg-white">
-        <div className={`${WRAP} grid gap-8 py-12 sm:grid-cols-2 lg:grid-cols-[1.6fr_1fr_1fr]`}>
-          <div>
-            <Logo size={36} />
-            <p className="mt-3 max-w-xs text-sm text-muted">{TAGLINE}</p>
-          </div>
-          <div>
-            <h4 className="text-sm font-semibold text-forest">Quick Links</h4>
-            <ul className="mt-3 space-y-2 text-sm text-muted">
-              <li><Link href="/" className="hover:text-soft">Home</Link></li>
-              <li><Link href="/about" className="hover:text-soft">About</Link></li>
-              <li><Link href="/#features" className="hover:text-soft">Features</Link></li>
-              <li><Link href="/about" className="hover:text-soft">Contact</Link></li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="text-sm font-semibold text-forest">Support</h4>
-            <ul className="mt-3 space-y-2 text-sm text-muted">
-              <li><Link href="/about" className="hover:text-soft">FAQ</Link></li>
-              <li><Link href="/about" className="hover:text-soft">Help</Link></li>
-              <li><Link href="/login" className="hover:text-soft">Login</Link></li>
-            </ul>
-          </div>
-        </div>
-        <div className="border-t border-line py-5 text-center text-xs text-muted">© {new Date().getFullYear()} CompuResolve. All rights reserved.</div>
-      </footer>
+      <PublicFooter />
     </div>
   );
 }

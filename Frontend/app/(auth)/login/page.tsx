@@ -1,9 +1,8 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import AuthLayout from '@/components/layout/AuthLayout';
-import { Banner, Button, Input, PasswordInput } from '@/components/ui/primitives';
+import { Banner, Button, TextLink, Input, PasswordInput } from '@/components/ui/primitives';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { api, ApiError, errorMessage, isRateLimited } from '@/lib/api';
 import { EMAIL_RE } from '@/lib/format';
@@ -61,7 +60,7 @@ export default function LoginPage() {
   };
 
   return (
-    <AuthLayout title="Welcome back" subtitle="Sign in to your CompuResolve account." footer={<>New student? <Link href="/register" className="font-medium text-soft hover:underline">Create an account</Link></>}>
+    <AuthLayout title="Welcome back" subtitle="Sign in to your CompuResolve account." footer={<>New student? <TextLink href="/register">Create an account</TextLink></>}>
       <form onSubmit={submit} className="space-y-5" noValidate>
         {showExpired && <Banner tone="warn">Your session expired. Please sign in again.</Banner>}
         {formError && <Banner tone="error">{formError}</Banner>}
@@ -72,7 +71,7 @@ export default function LoginPage() {
         )}
         <Input label="Email" icon="mail" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} error={errors.email} placeholder="you@example.com" />
         <PasswordInput label="Password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} error={errors.password} placeholder="Your password" />
-        <div className="text-right"><Link href="/forgot-password" className="text-sm font-medium text-soft hover:underline">Forgot password?</Link></div>
+        <div className="text-right"><TextLink href="/forgot-password" className="text-sm">Forgot password?</TextLink></div>
         <Button type="submit" size="lg" full loading={busy}>Sign in</Button>
       </form>
     </AuthLayout>

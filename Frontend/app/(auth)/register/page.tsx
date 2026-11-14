@@ -1,8 +1,7 @@
 'use client';
 import React, { useState } from 'react';
-import Link from 'next/link';
 import AuthLayout from '@/components/layout/AuthLayout';
-import { Banner, Button, Input, PasswordInput, Select } from '@/components/ui/primitives';
+import { Banner, Button, TextLink, Input, PasswordInput, Select } from '@/components/ui/primitives';
 import Icon from '@/components/ui/Icon';
 import { api, errorMessage, fieldErrors } from '@/lib/api';
 import { useFetch } from '@/lib/hooks';
@@ -73,7 +72,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <AuthLayout title="Create your account" subtitle="Student accounts only. Staff join by invitation." footer={<>Already registered? <Link href="/login" className="font-medium text-soft hover:underline">Sign in</Link></>}>
+    <AuthLayout title="Create your account" subtitle="Student accounts only. Staff join by invitation." footer={<>Already registered? <TextLink href="/login">Sign in</TextLink></>}>
       <form onSubmit={submit} className="space-y-4" noValidate>
         {formError && <Banner tone="error">{formError}</Banner>}
         <Input label="Full name" value={f.fullName} onChange={set('fullName')} error={errors.fullName} autoComplete="name" placeholder="e.g. Ada Okafor" />

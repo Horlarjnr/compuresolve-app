@@ -1,42 +1,38 @@
 import React from 'react';
 import Link from 'next/link';
 import Logo, { TAGLINE } from '@/components/ui/Brand';
+import { PUBLIC_WRAP } from './public-nav';
 
-export function PublicHeader() {
-  return (
-    <header className="sticky top-0 z-30 border-b border-line bg-white/95 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
-        <Logo size={34} />
-        <nav className="hidden items-center gap-8 text-sm font-medium text-ink md:flex" aria-label="Main">
-          <Link href="/" className="hover:text-soft">Home</Link>
-          <Link href="/#features" className="hover:text-soft">Features</Link>
-          <Link href="/#how" className="hover:text-soft">How it works</Link>
-          <Link href="/about" className="hover:text-soft">About</Link>
-        </nav>
-        <div className="flex items-center gap-2">
-          <Link href="/login" className="rounded-xl px-4 py-2 text-sm font-medium text-forest hover:bg-mint/60">Sign in</Link>
-          <Link href="/register" className="rounded-xl bg-forest px-4 py-2 text-sm font-medium text-white hover:bg-soft">Get started</Link>
-        </div>
-      </div>
-    </header>
-  );
-}
+export { PublicHeader } from './PublicHeader';
 
+// The one footer used by every public page.
 export function PublicFooter() {
   return (
-    <footer className="bg-forest text-mint/80">
-      <div className="mx-auto flex max-w-6xl flex-col gap-6 px-5 py-10 sm:flex-row sm:items-center sm:justify-between">
+    <footer className="bg-white">
+      <div className={`${PUBLIC_WRAP} grid gap-8 py-12 sm:grid-cols-2 lg:grid-cols-[1.6fr_1fr_1fr]`}>
         <div>
-          <Logo variant="dark" size={34} />
-          <p className="mt-3 max-w-xs text-sm">{TAGLINE}</p>
+          <Logo size={36} />
+          <p className="mt-3 max-w-xs text-sm text-muted">{TAGLINE}</p>
         </div>
-        <nav className="flex flex-wrap gap-6 text-sm" aria-label="Footer">
-          <Link href="/about" className="hover:text-white">About</Link>
-          <Link href="/login" className="hover:text-white">Sign in</Link>
-          <Link href="/register" className="hover:text-white">Create account</Link>
-        </nav>
+        <div>
+          <h4 className="text-sm font-semibold text-forest">Quick Links</h4>
+          <ul className="mt-3 space-y-2 text-sm text-muted">
+            <li><Link href="/" className="hover:text-soft">Home</Link></li>
+            <li><Link href="/about" className="hover:text-soft">About</Link></li>
+            <li><Link href="/#features" className="hover:text-soft">Features</Link></li>
+            <li><Link href="/about" className="hover:text-soft">Contact</Link></li>
+          </ul>
+        </div>
+        <div>
+          <h4 className="text-sm font-semibold text-forest">Support</h4>
+          <ul className="mt-3 space-y-2 text-sm text-muted">
+            <li><Link href="/about" className="hover:text-soft">FAQ</Link></li>
+            <li><Link href="/about" className="hover:text-soft">Help</Link></li>
+            <li><Link href="/login" className="hover:text-soft">Login</Link></li>
+          </ul>
+        </div>
       </div>
-      <div className="border-t border-teal py-4 text-center text-xs text-mint/60">© {new Date().getFullYear()} CompuResolve · Faculty of Computing</div>
+      <div className="border-t border-line py-5 text-center text-xs text-muted">© {new Date().getFullYear()} CompuResolve. All rights reserved.</div>
     </footer>
   );
 }

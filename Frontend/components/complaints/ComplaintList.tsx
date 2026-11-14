@@ -1,9 +1,8 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Button, Card, Input, Pagination, Select, StatusBadge, PageHeader, TableSkeleton, Pill } from '@/components/ui/primitives';
+import { Button, Card, Input, Pagination, SearchInput, Select, StatusBadge, PageHeader, TableSkeleton, Pill, TextLink } from '@/components/ui/primitives';
 import { DataState, EmptyState } from '@/components/ui/States';
-import Icon from '@/components/ui/Icon';
 import { useDebounced, useFetch } from '@/lib/hooks';
 import { STATUSES, STATUS_META } from '@/lib/status';
 import { fmtDate } from '@/lib/format';
@@ -63,10 +62,7 @@ export default function ComplaintList({ slug, mode, titleOverride }: { slug: str
       />
       <Card pad={false}>
         <div className="grid gap-3 border-b border-line p-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="relative">
-            <Icon name="search" size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search title or reference" aria-label="Search" className="h-11 w-full rounded-xl border border-line bg-white pl-10 pr-3 text-sm focus:border-soft focus:outline-none focus:ring-2 focus:ring-soft/30" />
-          </div>
+          <SearchInput value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search title or reference" aria-label="Search" />
           <Select value={status} onChange={(e) => setStatus(e.target.value)} aria-label="Filter by status">
             <option value="">All statuses</option>
             {STATUSES.map((s) => <option key={s} value={s}>{STATUS_META[s].label}</option>)}
@@ -120,7 +116,7 @@ export default function ComplaintList({ slug, mode, titleOverride }: { slug: str
                 <tbody>
                   {rows.map((r) => (
                     <tr key={r.id} className="border-b border-line/60 last:border-0 hover:bg-mint/30">
-                      <td className="py-3.5 pr-4"><Link href={`/${slug}/complaints/${r.id}`} className="font-medium text-soft hover:underline">{r.reference}</Link></td>
+                      <td className="py-3.5 pr-4"><TextLink href={`/${slug}/complaints/${r.id}`}>{r.reference}</TextLink></td>
                       <td className="max-w-[260px] truncate py-3.5 pr-4">{r.title}</td>
                       <td className="py-3.5 pr-4 text-muted">{r.category?.name}</td>
                       {staff && <td className="py-3.5 pr-4">{r.submittedBy?.fullName}</td>}

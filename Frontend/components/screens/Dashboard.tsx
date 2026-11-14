@@ -1,7 +1,7 @@
 'use client';
 import React from 'react';
 import Link from 'next/link';
-import { Button, Card, CardHeader, PageHeader, Skeleton, StatCard, StatusBadge } from '@/components/ui/primitives';
+import { Button, Card, CardHeader, PageHeader, Skeleton, StatCard, StatusBadge, TextLink } from '@/components/ui/primitives';
 import { ErrorFromApi, EmptyState } from '@/components/ui/States';
 import Donut from '@/components/ui/Donut';
 import { useFetch } from '@/lib/hooks';
@@ -14,7 +14,7 @@ function Recent({ slug, items, title = 'Recent complaints', viewAll }: { slug: s
   const staff = slug !== 'student';
   return (
     <Card>
-      <CardHeader title={title} action={viewAll ? <Link href={viewAll} className="text-sm font-medium text-soft hover:underline">View all</Link> : undefined} />
+      <CardHeader title={title} action={viewAll ? <TextLink href={viewAll} className="text-sm">View all</TextLink> : undefined} />
       {items.length === 0 ? (
         <EmptyState title="Nothing here yet" message="Complaints will show up here as they come in." />
       ) : (
@@ -124,7 +124,7 @@ export default function Dashboard({ slug }: { slug: string }) {
             <div className="mt-6 grid gap-6 lg:grid-cols-2">
               <Card><CardHeader title="Complaints by status" /><Donut byStatus={d.byStatus} /></Card>
               <Card>
-                <CardHeader title="Officer workload" subtitle="Open complaints assigned to each officer" action={<Link href={`${base}/staff`} className="text-sm font-medium text-soft hover:underline">Manage staff</Link>} />
+                <CardHeader title="Officer workload" subtitle="Open complaints assigned to each officer" action={<TextLink href={`${base}/staff`} className="text-sm">Manage staff</TextLink>} />
                 {d.officers.length === 0 ? (
                   <EmptyState icon="users" title="No active officers" message="Invite an officer so complaints can be assigned." action={<Button href={`${base}/invitations`} size="sm">Invite officer</Button>} />
                 ) : (

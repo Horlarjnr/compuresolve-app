@@ -1,7 +1,6 @@
 'use client';
 import React, { useState } from 'react';
-import Link from 'next/link';
-import { Banner, Button, Card, CardHeader, Modal, Select, Skeleton, StatusBadge, Textarea, Pill } from '@/components/ui/primitives';
+import { Banner, Button, Card, CardHeader, Modal, Select, Skeleton, StatusBadge, Textarea, Pill, TextLink } from '@/components/ui/primitives';
 import { ErrorFromApi } from '@/components/ui/States';
 import Icon from '@/components/ui/Icon';
 import Chat from './Chat';
@@ -135,9 +134,9 @@ export default function ComplaintDetail({ slug, id }: { slug: string; id: string
 
   return (
     <>
-      <Link href={`/${slug}/${slug === 'officer' ? 'queue' : 'complaints'}`} className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-soft hover:underline">
+      <TextLink href={`/${slug}/${slug === 'officer' ? 'queue' : 'complaints'}`} className="mb-4 inline-flex items-center gap-1.5 text-sm">
         <Icon name="arrow-left" size={16} /> Back to complaints
-      </Link>
+      </TextLink>
 
       <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">

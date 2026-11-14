@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/components/providers/AuthProvider';
 import Logo from '@/components/ui/Brand';
 import Icon from '@/components/ui/Icon';
-import { Avatar, Skeleton, cx } from '@/components/ui/primitives';
+import { Avatar, SearchInput, Skeleton, cx, TextLink } from '@/components/ui/primitives';
 import { ErrorState } from '@/components/ui/States';
 import { NAV, ROLE_LABEL, ROLE_SLUG, SLUG_ROLE } from '@/lib/roles';
 import { useFetch } from '@/lib/hooks';
@@ -186,9 +186,8 @@ function Topbar({ slug, onMenu, subtitle }: { slug: string; onMenu: () => void; 
       <div className="md:hidden">
         <Logo size={28} href={homePath()} mark />
       </div>
-      <form onSubmit={search} className="relative hidden max-w-md flex-1 sm:block" role="search">
-        <Icon name="search" size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search complaints by title or reference…" className="h-10 w-full rounded-xl border border-line bg-page pl-10 pr-3 text-sm focus:border-soft focus:outline-none focus:ring-2 focus:ring-soft/30" aria-label="Search complaints" />
+      <form onSubmit={search} className="hidden max-w-md flex-1 sm:block" role="search">
+        <SearchInput size="sm" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search complaints by title or reference…" aria-label="Search complaints" />
       </form>
       <div className="ml-auto flex items-center gap-1 sm:gap-2">
         <span className="hidden text-xs text-muted lg:block">{subtitle}</span>
@@ -258,7 +257,7 @@ function NotificationPanel({ slug, onClose, onChanged }: { slug: string; onClose
     <div className="absolute right-0 mt-2 w-[min(92vw,380px)] rounded-2xl border border-line bg-white shadow-pop">
       <div className="flex items-center justify-between border-b border-line px-4 py-3">
         <h3 className="text-sm font-semibold">Notifications</h3>
-        <Link href={`/${slug}/notifications`} onClick={onClose} className="text-xs font-medium text-soft hover:underline">View all</Link>
+        <TextLink href={`/${slug}/notifications`} onClick={onClose} className="text-xs">View all</TextLink>
       </div>
       <div className="max-h-[360px] overflow-y-auto">
         {loading ? (

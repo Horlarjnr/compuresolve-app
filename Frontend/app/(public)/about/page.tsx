@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import { Button } from '@/components/ui/primitives';
 import { PublicFooter, PublicHeader } from '@/components/layout/PublicChrome';
 
 export const metadata: Metadata = { title: 'About' };
@@ -35,8 +35,8 @@ export default function About() {
         </dl>
 
         <div className="mt-12 flex flex-wrap gap-3">
-          <Link href="/register" className="inline-flex h-12 items-center rounded-xl bg-forest px-6 text-sm font-medium text-white hover:bg-soft">Create a student account</Link>
-          <Link href="/login" className="inline-flex h-12 items-center rounded-xl border border-line bg-white px-6 text-sm font-medium text-forest hover:bg-mint/60">Sign in</Link>
+          <Button href="/register" size="lg">Create a student account</Button>
+          <Button href="/login" variant="secondary" size="lg">Sign in</Button>
         </div>
       </main>
       <PublicFooter />

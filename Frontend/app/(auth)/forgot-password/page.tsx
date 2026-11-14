@@ -1,8 +1,7 @@
 'use client';
 import React, { useState } from 'react';
-import Link from 'next/link';
 import AuthLayout from '@/components/layout/AuthLayout';
-import { Banner, Button, Input } from '@/components/ui/primitives';
+import { Banner, Button, TextLink, Input } from '@/components/ui/primitives';
 import { api, errorMessage } from '@/lib/api';
 import { EMAIL_RE } from '@/lib/format';
 
@@ -30,7 +29,7 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <AuthLayout title="Forgot your password?" subtitle="Enter your email and we'll send you a reset link." footer={<Link href="/login" className="font-medium text-soft hover:underline">Back to sign in</Link>}>
+    <AuthLayout title="Forgot your password?" subtitle="Enter your email and we'll send you a reset link." footer={<TextLink href="/login">Back to sign in</TextLink>}>
       {sent ? (
         <Banner tone="success">If that email is registered, a reset link is on its way. It is valid for 1 hour.</Banner>
       ) : (
